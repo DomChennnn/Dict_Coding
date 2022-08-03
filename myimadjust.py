@@ -2,6 +2,22 @@ import numpy as np
 
 
 def myimadjust(A, met=None, fac=None):
+    '''
+
+    myimadjust      Trim or extend image, height and width have given factor.
+
+    If image already match the factors, the image size is not changed.
+    -------------------------------------------------------------------------
+    arguments:
+    :param A           an image, (returned as double) and possible larger
+               output than input
+    :param method      the method to use: 'none' to cut off
+               'mirror', 'zeros', 'periodic', 'extend' repeat last
+    :param fac         the factor that height and width may be divided by
+               it may be a single number or two elements, the first is
+               used on the height and the second on the width
+    :return adjusted img
+    '''
     if met !=None:
         if not ((met == None) or (met == 'extend') or (met == 'zeros') or (met == 'periodic') or (met == 'mirror')):
             print('Illegal method given', met, 'changed to none')

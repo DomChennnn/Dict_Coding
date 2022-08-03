@@ -1,5 +1,6 @@
 import numpy as np
 
+#two python dict, just like C++ class
 class Dictionarys:
     def __init__(self, D, K, N, L, transform):
         self.D = D

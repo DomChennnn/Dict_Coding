@@ -4,6 +4,26 @@ import primefac
 from myilwt2 import myilwt2
 
 def mycol2im(X, imsize = None, transform = None, size = None, neighborhood = None, increment = None):
+    '''
+    mycol2im     Rearrange matrix columns into blocks.
+    The 'inverse' is mycol2im.m
+    ----------------------------------------------------------------------
+    :param X     a matrix
+    There may be an additional number of input arguments, a struct, a cell
+        or as pairs: argName, argVal, ...
+        These are mostly as in myim2col. Note imsize
+    :param imsize to give size of buildt image, [M,N]. Note this is not
+        necessarily equal to original size of image. With L = size(X,2) we
+        should have: L = ((M-Mn+Mi)/Mi)*((N-Nn+Ni)/Ni)
+    :param transform  as in myim2col
+    :param size as in myim2col
+    :param neighborhood as in myim2col, [Mn,Nn] = size(nei);
+    :param increment as in myim2col, [Mi, Ni]
+    :return img
+    ----------------------------------------------------------------------
+    '''
+
+
     #default options
     M = 0
     N = 0 # size of reconstructed image
@@ -16,9 +36,6 @@ def mycol2im(X, imsize = None, transform = None, size = None, neighborhood = Non
     Mi = 0
     Ni = 0 # increment
     verbose = 0
-    lotrho = 0.95 # these three must be the same in myim2col
-    eltrho = 0.95
-    eltarg2 = 0.7
 
     #get the options
     if imsize != None:
@@ -111,7 +128,7 @@ def mycol2im(X, imsize = None, transform = None, size = None, neighborhood = Non
     if N == 0:
         N = (L*Mi/(M-Mn+Mi))*Ni+Nn-Ni
 
-    if not ( L == (((M-Mn+Mi)/Mi)*((N-Nn+Ni)/Ni)) ) :
+    if not (L == (((M-Mn+Mi)/Mi)*((N-Nn+Ni)/Ni))):
         print(['mycol2im: Given  image size is ', str(M), 'x', str(N)])
         print('Can not make given image size fit data X.')
         factors = list(primefac.primefac(L))
@@ -134,9 +151,7 @@ def mycol2im(X, imsize = None, transform = None, size = None, neighborhood = Non
               'increment step ', str(Mi), ' and ', str(Ni), '.'])
 
     block = np.zeros((Mn, Nn))
-    Lb = X.shape[0]
-    m = Mn
-    n = Nn
+
     k = 0
     for j in range(0,A.shape[1]-Nn+1,Ni):
         for i in range(0,A.shape[0]-Mn+1,Mi):
@@ -149,20 +164,7 @@ def mycol2im(X, imsize = None, transform = None, size = None, neighborhood = Non
     index = np.nonzero(Ac)
     A[index] = A[index] / Ac[index]
 
-    #do the transform
     # do the transform
-    if tr == None:
-        # do nothing
-        if verbose:
-            print('do nothing')
-
-    # elif tr == 'dct':
-    #     if verbose:
-    #         print('do dct with size',str(Ms),'x',str(Ns))
-    #     if Ms > 1:
-    #         A = cv2.dct(A.reshape((Ms,int(M*N/Ms))))
-
-    if type(tr) == str:
-        A = myilwt2(A, tr, np.log2(Ms))
+    A = myilwt2(A, tr, np.log2(Ms))
 
     return A

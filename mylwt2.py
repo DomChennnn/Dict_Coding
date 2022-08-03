@@ -1,7 +1,21 @@
 import numpy as np
 
 def mylwt2(X, ls, nivaa):
-    # image A is denoted X below, and level is denoted nivaa
+    '''
+
+    mylwt2          My variant of lwt2, use as lwt2 with Lifting
+    ----------------------------------------------------------------------
+    :param A     the image (matrix of doubles), size MxN, both M and N should have
+    2^level (typically 8, 16 or 32) as a factor. If not myimadjust.m
+    may be used to extend the image.
+    :param ls    cell array or a name as in liftwave
+                the name may also be 'j97' to get the wavelet as used in JPEG-
+                2000, M.D. Adams and R.Ward: Wavelet Transforms in the JPEG-2000
+                Standard.
+    level number of levels for the wavelet, typically 3, 4 or 5
+    :return Y     the coefficients, same size as X
+    ----------------------------------------------------------------------
+    '''
     nivaa = nivaa.astype(int)
     M,N = X.shape
     K = np.power(2,int(nivaa))

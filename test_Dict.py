@@ -5,8 +5,9 @@ import bz2
 from utils import test_Dict_par
 from imageapprox import imageapprox
 
-#gray
+#one channel test
 def test_Dict(filename, Bitrate_JPEG, Ds):
+    #init
     img = Image.open(filename)
     img = np.array(img,dtype=np.double)
     img_hgt, img_wdt = img.shape
@@ -17,14 +18,13 @@ def test_Dict(filename, Bitrate_JPEG, Ds):
     im_128 = img - 128
 
     for num in range(numBits):
-        # print(num)
         if num > 8:
             break
-
         bestQP = cur_QP
         target_bpp = Bitrate_JPEG[0, num]
         par = test_Dict_par(dictionary = Ds, targetPSNR = 100 - cur_QP, dele = -18, qLimit = [0.4, 1.00], estimateBits = 'Huff06', ompMethod = 'mexOMP', verbose = 0)
-        Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(im_128, par)
+        #test_Dict_par is a dict in python
+        Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(im_128, par) #the main processing function
 
         xc_encoded = bz2.compress((str(xC)).encode())
         bits = len(xc_encoded)*8
@@ -39,9 +39,9 @@ def test_Dict(filename, Bitrate_JPEG, Ds):
             dir1 = 1
 
         dirchange = 0
+
+        #search for better results
         while (abs(target_bpp - cur_bpp)>0.05) and bestPSNR<30:
-        # while (target_bpp>cur_bpp) or bestPSNR<40:
-        # while 1:
             if cur_bpp > target_bpp:
                 cur_QP = cur_QP + 1
                 if dir1==-1:
@@ -65,10 +65,6 @@ def test_Dict(filename, Bitrate_JPEG, Ds):
 
 
             if bestPSNR>PSNR_now:
-                # xc_encoded = bz2.compress((str(xC)).encode())
-                # bits = len(xc_encoded)*8
-                # bpp_val_each = (bits) / (img_hgt * img_wdt)
-                # cur_bpp = bpp_val_each
                 break
             else:
                 Ar = Ar_now
@@ -79,8 +75,6 @@ def test_Dict(filename, Bitrate_JPEG, Ds):
                 bpp_val_each = (bits) / (img_hgt * img_wdt)
                 cur_bpp = bpp_val_each
                 dele_fin, deldc_fin, thr_fin, thrdc_fin = dele, deldc, thr, thrdc
-
-
 
         psnr_val[0,num] = bestPSNR
         bpp_val[0,num] = bpp_val_each
@@ -95,10 +89,10 @@ def test_Dict(filename, Bitrate_JPEG, Ds):
     ori_encoded = bz2.compress((str(ori_list)).encode())
     ori_bits = len(ori_encoded)
     print(ori_bits)
-    #
-    #
-    img_Ar = Image.fromarray(np.uint8(Ar+res_Ar+128))
-    img_Ar.save('test_noloss.png')
+
+    # save img
+    # img_Ar = Image.fromarray(np.uint8(Ar+res_Ar+128))
+    # img_Ar.save('test_noloss.png')
 
 
     return psnr_val, bpp_val,res_Ar ,xC, dele_fin, deldc_fin, thr_fin, thrdc_fin, xc_encoded, res_encoded

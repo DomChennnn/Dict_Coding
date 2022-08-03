@@ -1,6 +1,27 @@
 import numpy as np
 
 def myilwt2(Y, ls, nivaa):
+    '''
+     myilwt2         My variant of ilwt2(..), use as ilwt2 with Lifting
+     Here mirror extension is done
+    ----------------------------------------------------------------------
+     :param Y     the coefficients, size MxN, both M and N should have
+           2^level (typically 8, 16 or 32) as a factor.
+     :param ls    cell array or a name as in liftwave (Matlab Wavelet Toolbox)
+           the name may also be 'j97' to get the wavelet as used in JPEG-
+           2000, M.D. Adams and R.Ward: Wavelet Transforms in the JPEG-2000 
+           Standard. (the obsolete name 'db97' is the same)
+           Note that 'jp2' is not the same as '9.7' in liftwave.
+           Also, the name 'm97' (better name could be 'e97' or 'ee97') let
+           the energi levels of low-pass and high-pass be more equal to
+           each other, (JPEG favours low-pass as it gives better visual
+           reconstruction when compressing)
+     level number of levels for the wavelet, typically 3, 4 or 5
+     :return A     the reconstructed image (matrix of doubles), same size as Y.
+    ----------------------------------------------------------------------
+    '''
+
+
     nivaa = nivaa.astype(int)
     M, N = Y.shape
     K = np.power(2, int(nivaa))

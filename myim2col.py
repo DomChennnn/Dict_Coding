@@ -1,9 +1,57 @@
 import numpy as np
-import cv2
 
 from myimadjust import myimadjust
 from mylwt2 import mylwt2
+# myim2col        Rearrange image blocks into columns.
+# The most important feature is that the columns can be made from a
+# coefficient domain of the image, i.e. a transform is done first then the
+# blocks are extracted.
+# The 'inverse' is mycol2im.py
+# functions, i.e: myimadjust, mylwt2
 def myim2col(A, transform=None, size=None, adjust=None, neighborhood=None, offset=None, increment=None):
+    '''
+    
+    ----------------------------------------------------------------------
+    :param: A     an image, ex: A = double(imread('lena.bmp')) - 128;
+    There may be an additional number of input arguments, a struct, a cell
+       or as pairs: argName, argVal, ...
+    :param: offset which may be [0,0] (default) or other values [Mo,No]
+       This is done first, i.e. the first operation on the image is to
+       remove the Mo first rows and the No first columns, thus making
+       A(Mo+1,No+1) as the new (upper left) corner of the image
+       When used, offset reduce the size of the image
+    :param: transform
+       The option value may be the name of a transform: 'dct', 'lot'
+       or 'elt', or the transform given as a matrix. Note that in
+       analysis part (here) the transposed of this matrix is used, while
+       for synthesis (mycol2im) the matrix is used as given, this means
+       that if the transform is orthogonal the same matrix can be given
+       both in myim2col and mycol2im. Alternatively, the option value
+       can be the name of a wavelet or the wavelet lifting scheme given
+       directly as a cell array. Wavelt name as in mylwt2, that is as
+       liftwave (in Matlab  Wavelet Toolbox) or 'j97' or 'm97'.
+       The transform is always a separable transform, and except for
+       'dct', 'lot' and 'elt' with same size in both directions.
+       Default option value is 'none' for reshape in pixel domain.
+    :param: size is for the size of the transform. Only for 'dct', 'lot'
+       and 'elt' it may be different in the two dimension, [Ms,Ns].
+       For wavelet Ns = Ms, and it should be 2,4,8,16 or 32.
+    :param: adjust. Before the transform is done the image size must be
+       adjusted to match the size of the transform. This is done by
+       myimadjust.m and the value of the adjust parameter is used as
+       method in myimadjust: 'none' or 'extend' is preferred.
+    :param: neighborhood can be used to extract special neighborhoods
+       around a pixel. The option value may be 8, [8,8], ones(8) or a
+       (logical)  matrix indicating which elements to include,
+       for example: kron( ones(4), [1,0]'*[1,0] );
+       default is size of transform or [4,4] if transform is 'none'.
+    :param: increment which may be  'distinct' for (size of) neighborhood
+       blocks (default), or 'sliding' for [1,1] or numbers [Mi,Ni]
+    :return: columns
+    ----------------------------------------------------------------------
+    '''
+    
+    
     #default options
     Mo = 0
     No = 0 # offset
@@ -17,9 +65,6 @@ def myim2col(A, transform=None, size=None, adjust=None, neighborhood=None, offse
     Mi = 0
     Ni = 0 # increment
     verbose = 0
-    lotrho = 0.95 # these three must be the same in mycol2im
-    eltrho = 0.95
-    eltarg2 = 0.7
 
     #get the options
     if transform != None:
@@ -59,7 +104,6 @@ def myim2col(A, transform=None, size=None, adjust=None, neighborhood=None, offse
         else:
             raise IndexError('myim2col: illegal option offset. We ignore it.')
 
-
     if increment != None:
         if len(increment) == 1:
             Mi = max(0, np.floor(increment).astype(int))
@@ -84,10 +128,6 @@ def myim2col(A, transform=None, size=None, adjust=None, neighborhood=None, offse
         else:
             Ms = 8
             Ns = 8
-
-    if tr == 'lot' or tr == 'elt':
-        Ms = Ms - np.mod(Ms, 2)
-        Ns = Ns - np.mod(Ns, 2)
 
     if (not tr == None) and (not tr == 'lot') and (not tr == 'elt') and (not tr == 'dct'):
         Ms = max(2, np.power(2, (np.floor(np.log2(Ms))).astype(int)))
@@ -127,24 +167,11 @@ def myim2col(A, transform=None, size=None, adjust=None, neighborhood=None, offse
         if verbose:
             print('Adjust image to fit ',str(Ms),'x',str(Ns),' blocks by method ',amet,'.')
         A = myimadjust(A, amet, [Ms, Ns])
-    M, N = A.shape
     if verbose:
         print('adjust image is ', str(A.shape[0]),' x ', str(A.shape[1]))
 
     #do the transform
-    if tr == None:
-        #do nothing
-        if verbose:
-            print('do nothing')
-
-    # elif tr == 'dct':
-    #     if verbose:
-    #         print('do dct with size',str(Ms),'x',str(Ns))
-    #     if Ms > 1:
-    #         A = cv2.dct(A.reshape((Ms,int(M*N/Ms))))
-
-    if type(tr) == str:
-        A = mylwt2(A, tr, np.log2(Ms))
+    A = mylwt2(A, tr, np.log2(Ms))
 
     #find the blocks
     index = np.nonzero(nei)#reshape to col(start from 0 to the num-1 of the matrix)
