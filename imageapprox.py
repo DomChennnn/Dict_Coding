@@ -1,3 +1,5 @@
+import time
+
 import numpy as np
 from scipy.sparse import csr_matrix
 import copy
@@ -208,7 +210,11 @@ def imageapprox(A, par):
                 print(['imageapprox calls sparseapprox using',
                        ' tSSE = ', str(tSSE),
                        ' (target PSNR = ', str(tpsnr), ')'])
+
+            # tic = time.time()
             W = sparseapprox(X, Ds.D, 'javaORMP', targetNonZeros=N / 2, tSSE=tSSE, v=max(0, verbose - 1))
+            # tac = time.time()
+            # print(tac-tic)
         elif (tsf < 1):
             tnnz = np.floor(Ma * Na * tsf) - L
             if verbose:

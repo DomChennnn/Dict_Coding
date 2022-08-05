@@ -217,12 +217,9 @@ def sparseapprox(X, D, met, targetNonZeros=None, targetRelativeError=None,
         if (L == 1):
             jMP = MatchingPursuit(jD)
         else:
-            start_time = time.time()
             jDD = SymmetricMatrix(K, K)
             jDD.eqInnerProductMatrix(jD)
             jMP = MatchingPursuit(jD, jDD)
-            end_time = time.time()
-            usedtime = (end_time - start_time) * 1000
 
     if (met == 'javaORMP') or (met == 'javaOrderRecursiveMatchingPursuit'):
         #
