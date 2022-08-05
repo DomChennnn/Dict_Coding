@@ -1,0 +1,10 @@
+numpy
+scipy
+h5py
+glob
+time
+bz2
+PIL
+jpype
+primefac
+copy
