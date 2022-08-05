@@ -1,7 +1,9 @@
+import os
 import numpy as np
 import time
 import jpype
 
+PROJECT_PATH = os.path.dirname(os.path.abspath(__file__))
 
 def sparseapprox(X, D, met, targetNonZeros=None, targetRelativeError=None,
                  targetAbsoluteError=None, numberOfIterations=None, p=None, l=None,
@@ -203,7 +205,7 @@ def sparseapprox(X, D, met, targetNonZeros=None, targetRelativeError=None,
         tae = tre * norm2X
 
     jvmPath = jpype.getDefaultJVMPath()  # the path of jvm.dll
-    classpath = "C:\dmcprojects\HW_dict_coding_v02\javaclasses"  # the path of PasswordCipher.class
+    classpath = os.path.join(PROJECT_PATH, "javaclasses")  # the path of PasswordCipher.class
     jvmArg = "-Djava.class.path=" + classpath
     if not jpype.isJVMStarted():  # test whether the JVM is started
         jpype.startJVM(jvmPath, jvmArg)  # start JVM
