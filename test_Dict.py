@@ -5,7 +5,7 @@ import bz2
 from utils import test_Dict_par
 from imageapprox import imageapprox
 
-#one channel test
+# one channel test
 def test_Dict(img, Bitrate_JPEG, Ds):
     #init
     # img = Image.open(filename)
@@ -14,7 +14,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     numBits = Bitrate_JPEG.shape[1]
     psnr_val = np.zeros((1, numBits))
     bpp_val = np.zeros((1,numBits))
-    cur_QP = 50
+    cur_QP = 69
     im_128 = img - 128
 
     # for num in range(numBits):
@@ -80,11 +80,13 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     psnr_val = bestPSNR
     bpp_val = bpp_val_each
 
-    res_Ar = np.uint8(im_128 - Ar)
+    res_Ar = np.int8(im_128 - np.clip(Ar,-128,127))
+
+
     res_encoded = bz2.compress((str(res_Ar)).encode())
 
-    print('bestPSNR:')
-    print(bestPSNR)
+    # print('bestPSNR:')
+    # print(bestPSNR)
     # ori = im_128.reshape((-1,1))
     # ori_list = []
     # for i in range(len(ori)):
@@ -93,6 +95,8 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     # ori_bits = len(ori_encoded)
 
     # save img
+    # img_Ar = Image.fromarray(np.uint8(np.clip(Ar,-128,127) + 128))
+    # img_Ar.save('test_with_loss.png')
     # img_Ar = Image.fromarray(np.uint8(Ar+res_Ar+128))
     # img_Ar.save('test_noloss.png')
 
@@ -100,7 +104,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     return psnr_val, bpp_val,res_Ar ,xC, dele_fin, deldc_fin, thr_fin, thrdc_fin, xc_encoded, res_encoded
 
 
-
+#
 # # RGB
 # def test_Dict(filename, Bitrate_JPEG, Ds):
 #     img = Image.open(filename).convert('RGB')
@@ -109,13 +113,9 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     numBits = Bitrate_JPEG.shape[1]
 #     psnr_val = np.zeros((1, numBits))
 #     bpp_val = np.zeros((1,numBits))
-#     cur_QP = 65
+#     cur_QP = 60
 #     im_128 = img - 128
 #
-#     # for num in range(numBits):
-#     #     # print(num)
-#     #     if num > 8:
-#     #         break
 #
 #     bestQP = cur_QP
 #     target_bpp = 0.2
@@ -204,12 +204,15 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     thr_fin = [thr_R,thr_G, thr_B]
 #     thrdc_fin = [thrdc_R,thrdc_G,thrdc_B]
 #
-#     # img_Ar = Image.fromarray(np.uint8(RGB+res_Ar+128))
-#     # img_Ar.save('test_noloss.png')
+#     img_Ar = Image.fromarray(np.uint8(np.clip((RGB+128),0,255)))
+#     img_Ar.save('test_with_loss.png')
+#
+#     img_Ar = Image.fromarray(np.uint8(RGB+res_Ar+128))
+#     img_Ar.save('test_no_loss.png')
 #     return psnr_val, bpp_val,res_Ar ,xC, dele_fin, deldc_fin, thr_fin, thrdc_fin, xc_encoded, res_encoded
 
 
-# maybe used in lossless compression
+# # maybe used in lossless compression
 # def test_Dict(filename, Bitrate_JPEG, Ds):
 #     img = Image.open(filename).convert('RGB')
 #     img = np.array(img,dtype=np.double)
@@ -217,7 +220,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     numBits = Bitrate_JPEG.shape[1]
 #     psnr_val = np.zeros((1, numBits))
 #     bpp_val = np.zeros((1,numBits))
-#     cur_QP = 60
+#     cur_QP = 66
 #     im_128 = img - 128
 #
 #     # for num in range(numBits):
@@ -292,6 +295,6 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     res_Ar = np.uint8(im_128 - RGB)
 #     res_encoded = bz2.compress((str(res_Ar)).encode())
 #
-#     img_Ar = Image.fromarray(np.uint8(RGB+128))
+#     img_Ar = Image.fromarray(np.uint8(np.clip(RGB,-128,127)+128))
 #     img_Ar.save('test_RGB.png')
 #     return psnr_val, bpp_val,res_Ar ,xC, dele_fin, deldc_fin, thr_fin, thrdc_fin, xc_encoded, res_encoded
