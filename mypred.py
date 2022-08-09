@@ -85,7 +85,7 @@ def mypred(inn, nofS=None, verbose=None):
         V[i, j] = v
         Y[i, j] = X[i, j - 1]
         j = 2
-        v = (xrange / 16 + abs(X[i, 2] - X[i, 1])) / 2
+        v = (xrange / 16 + abs(X[i, 1] - X[i, 0])) / 2
         V[i, j] = v
         Y[i, j] = X[i, j - 1]
         j = 3
@@ -197,7 +197,15 @@ def mypred(inn, nofS=None, verbose=None):
                          [x6, x8, x7, x9], [x2, x10, x9, x11],  # *
                          [(3 * x5 + 2 * x2) / 5, (3 * x3 + 2 * x10) / 5,  # *
                           (3 * x6 + 2 * x9) / 5, (3 * x2 + 2 * x11) / 5]])  # *
-                temp, pNo = np.min(np.dot(d, w)), np.argmin(np.dot(d, w))  # *
+                lib_search = np.dot(d, w)
+                temp, pNo = np.min(lib_search), np.argmin(lib_search)  # *
+
+                # if (lib_search[0] ==lib_search[4]) and lib_search[0] == temp:
+                #     pNo = 4
+                # # if len(np.unique(lib_search)) != len(lib_search):
+                # #    print(lib_search)
+                # #    print('('+str(i)+','+str(j)+')')
+
                 v = np.mean(d[pNo, :])  # *
                 # *************************************************************
                 V[i, j] = v
@@ -213,8 +221,8 @@ def mypred(inn, nofS=None, verbose=None):
                     Y[i, j] = np.floor((3 * x1 + 2 * x2) / 5 + 0.45)
 
         # this is just for test
-        # Y[17, 10] = -2
-        # Y[29, 20] = -3
+        # Y[27,48] = 13
+        # V[27,48] = 10.55
 
         xC = []
         for i in range((nofS + 1).astype(int)):
@@ -222,7 +230,7 @@ def mypred(inn, nofS=None, verbose=None):
         # limits to store
         t = np.sort(V.reshape((-1, 1)), axis=0)
         vLim = np.ceil(
-            t[(np.floor(np.array(range(1, (nofS).astype(int))) * ((M * N) / nofS))).astype(int)] * vLimRange / xrange).T
+            t[(np.floor(np.array(range(1, (nofS).astype(int))) * ((M * N) / nofS))).astype(int) - 1] * vLimRange / xrange).T
         xC[0] = [M, np.log2(xrange), nofS, vLim]
         vLim_copy = vLim.copy()
 
@@ -233,12 +241,12 @@ def mypred(inn, nofS=None, verbose=None):
         for i in range(M):
             for j in range(N):
                 Sekv[i, j] = np.where(V[i, j] <= vLim)[0][0]
+        # Sekv[0,2] = 1
 
-        #
         # # make Y prediction error (and transpose it to get elements orderd by row)
-        Y = (X - Y)
+        Y = X - Y
         # # sequence also transpose   d
-        Sekv = Sekv
+        # Sekv = Sekv
         for i in range(1, (nofS + 1).astype(int)):
             xC[i] = Y[Sekv == (i - 1)]
             # xC{i} = makePositive( Y(Sekv==(i-1)) )
@@ -382,8 +390,14 @@ def mypred(inn, nofS=None, verbose=None):
                 xCi[Sekv] = xCi[Sekv] + 1
                 X[i, j] = X[i - 1, j] + xC[Sekv][int(xCi[Sekv]) - 1]
 
-            if (i > 3):
-                v = sum(abs(X[(i - 1):(i - 3), j] - X[(i - 2):(i - 4), j])) / 3
+            if (i == 4):
+                v = sum(abs(X[(i - 1):(i - 4), j] - X[(i - 2):0, j])) / 3
+                Sekv = np.where(v <= vLim)[0][0] + 1
+                xCi[Sekv] = xCi[Sekv] + 1
+                X[i, j] = X[i - 1, j] + xC[Sekv][int(xCi[Sekv]) - 1]
+
+            if (i > 4):
+                v = sum(abs(X[(i - 1):(i - 4), j] - X[(i - 2):(i - 5), j])) / 3
                 Sekv = np.where(v <= vLim)[0][0] + 1
                 xCi[Sekv] = xCi[Sekv] + 1
                 X[i, j] = X[i - 1, j] + xC[Sekv][int(xCi[Sekv]) - 1]
@@ -439,7 +453,10 @@ def mypred(inn, nofS=None, verbose=None):
                 # *************************************************************
                 Sekv = np.where(v <= vLim)[0][0] + 1
                 xCi[Sekv] = xCi[Sekv] + 1
-                p = xC[Sekv][int(xCi[Sekv] - 1)]
+
+                # print(Sekv)
+                # print(int(xCi[Sekv]) - 1)
+                p = xC[Sekv][int(xCi[Sekv]) - 1]
 
                 if pNo == 0:
                     X[i, j] = x1 + p
