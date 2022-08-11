@@ -43,22 +43,24 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 
     #search for better results
     while bestPSNR<30:
-        if cur_bpp > target_bpp:
-            cur_QP = cur_QP + 1
-            if dir1==-1:
-                dirchange = 0
-            else:
-                dirchange = 1
+        # if cur_bpp > target_bpp:
+        #     cur_QP = cur_QP + 1
+        #     if dir1==-1:
+        #         dirchange = 0
+        #     else:
+        #         dirchange = 1
+        #
+        # else:
+        #     cur_QP = cur_QP - 1
+        #     if dir1==1:
+        #         dirchange = 0
+        #     else:
+        #         dirchange = 1
+        #
+        # if dirchange==1 or cur_QP>99 or cur_QP<1:
+        #     break
+        cur_QP = cur_QP - 1
 
-        else:
-            cur_QP = cur_QP - 1
-            if dir1==1:
-                dirchange = 0
-            else:
-                dirchange = 1
-
-        if dirchange==1 or cur_QP>99 or cur_QP<1:
-            break
 
         par = test_Dict_par(dictionary=Ds, targetPSNR=100 - cur_QP, dele=-18, qLimit=[0.4, 1.00],
                             estimateBits='Huff06', ompMethod='mexOMP', verbose=0)
@@ -80,11 +82,14 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     psnr_val = bestPSNR
     bpp_val = bpp_val_each
 
-    res_Ar = np.int8(im_128 - np.clip(Ar,-128,127))
-
+    # res_Ar = np.int8(im_128 - np.clip(Ar,-128,127))
+    res_Ar = np.int8((im_128 - Ar) + 0.5 * np.sign(im_128 - Ar))
 
     res_encoded = bz2.compress((str(res_Ar)).encode())
 
+    # rec = np.int8(Ar+0.5 * np.sign(Ar))+res_Ar
+    # res = rec-im_128
+    # print(np.var(res))
     # print('bestPSNR:')
     # print(bestPSNR)
     # ori = im_128.reshape((-1,1))
