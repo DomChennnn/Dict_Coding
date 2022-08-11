@@ -121,12 +121,11 @@ def compute_psnr(img1,img2):
 
 # test on RGB
 # init
-encode_start = time.time()
 foldername = 'GenerallImages'
 blk_size = 8
 transform = 'm79'
 
-path_in = './/Images//' + foldername + '//Test2//bmp_256//'                      # Image dir path
+path_in = './/Images//' + foldername + '//Test2//bmp_test//walking'                      # Image dir path
 data = scio.loadmat('.//Dictionary//Dict_RLS_' + foldername + '.mat')   # load Dictionary path
 D = data['dlsRLS'][0, 0][0]                                             # Dictionary
 
@@ -148,16 +147,23 @@ Quality_Dict = np.zeros((NumberImages, numBit))
 
 #encode, this can be divided into two steps, including dictionary encoding and res encoding
 #dictionary encode
-NumberImages = 1
+# NumberImages = 1
 for ind_img in range(NumberImages):
+    # print(Dimg[ind_img])
     # img = Image.open(Dimg[ind_img]).convert('RGB')
-    img = Image.open('F:\\nju_01\\projects\\Dict_Coding-master\\Images\\GenerallImages\\Test2\\bmp_466\\kodim24.bmp').convert('RGB')
+    # ind_img = 48
+    encode_start = time.time()
+    path = 'C:\\dmcprojects\\Dict_Coding\\Images\\GenerallImages\\Test2\\bmp_test\\walking\\'+str(ind_img)+'.bmp'
+    print(path)
+    img = Image.open(path).convert('RGB')
     img = np.array(img, dtype=np.double)
-    Quality_Dict[ind_img, :], Bitrate_Dict[ind_img,:], res_R, xc_R, dele_R, deldc_R, thr_R, thrdc_R, _, _ = test_Dict(img[:,:,0], Bitrate_JPEG[[ind_img], :], Ds)
-    Quality_Dict[ind_img, :], Bitrate_Dict[ind_img,:], res_G, xc_G, dele_G, deldc_G, thr_G, thrdc_G, _, _ = test_Dict(img[:,:,1], Bitrate_JPEG[[ind_img], :], Ds)
-    Quality_Dict[ind_img, :], Bitrate_Dict[ind_img,:], res_B, xc_B, dele_B, deldc_B, thr_B, thrdc_B, _, _ = test_Dict(img[:,:,2], Bitrate_JPEG[[ind_img], :], Ds)
+    h, w  = img.shape[0], img.shape[1]
+    ad_h, ad_w = int(np.ceil(h/8)*8), int(np.ceil(w/8)*8)
+    Quality_Dict[ind_img, :], Bitrate_Dict[ind_img, :], res_R, xc_R, dele_R, deldc_R, thr_R, thrdc_R, _, _ = test_Dict(img[:, :, 0], Bitrate_JPEG[[ind_img], :], Ds)
+    Quality_Dict[ind_img, :], Bitrate_Dict[ind_img, :], res_G, xc_G, dele_G, deldc_G, thr_G, thrdc_G, _, _ = test_Dict(img[:, :, 1], Bitrate_JPEG[[ind_img], :], Ds)
+    Quality_Dict[ind_img, :], Bitrate_Dict[ind_img, :], res_B, xc_B, dele_B, deldc_B, thr_B, thrdc_B, _, _ = test_Dict(img[:, :, 2], Bitrate_JPEG[[ind_img], :], Ds)
 
-    for i in range(8):
+    for i in range(len(xc_R)):
         xc_R[i] = list(xc_R[i])
         xc_G[i] = list(xc_G[i])
         xc_B[i] = list(xc_B[i])
@@ -169,16 +175,28 @@ for ind_img in range(NumberImages):
     #dictionary encode
     h, w = res_R.shape
 
-    res_R = res_R.reshape((-1, 1))
-    res_G = res_G.reshape((-1, 1))
-    res_B = res_B.reshape((-1, 1))
+    # res_R = res_R.reshape((-1, 1))
+    # res_G = res_G.reshape((-1, 1))
+    # res_B = res_B.reshape((-1, 1))
+    # res_list_R = []
+    # res_list_G = []
+    # res_list_B = []
+    # for i in range(len(res_R)):
+    #     res_list_R.append(res_R[i, 0])
+    #     res_list_G.append(res_G[i, 0])
+    #     res_list_B.append(res_B[i, 0])
+
+    res_R = res_R.reshape((1, -1))
+    res_G = res_G.reshape((1, -1))
+    res_B = res_B.reshape((1, -1))
     res_list_R = []
     res_list_G = []
     res_list_B = []
-    for i in range(len(res_R)):
-        res_list_R.append(res_R[i, 0])
-        res_list_G.append(res_G[i, 0])
-        res_list_B.append(res_B[i, 0])
+    for i in range(len(res_R[0])):
+        res_list_R.append(res_R[0, i])
+        res_list_G.append(res_G[0, i])
+        res_list_B.append(res_B[0, i])
+
 
     res_encoded_R = bz2.compress((str(res_list_R)).encode(), 9)
     res_encoded_G = bz2.compress((str(res_list_G)).encode(), 9)
@@ -190,15 +208,6 @@ for ind_img in range(NumberImages):
     print('encode time:')
     print((encode_end-encode_start)*1000)
 
-# # xCdc = scio.loadmat('xCdc.mat')   # load Dictionary path
-# # xCdc = xCdc['xCdc']
-# # xC = []
-# # for i in range(4):
-# #     xC.append(xCdc[i,0])
-# # xC[0] = [59,8,3,79,137]
-# # Zdc_r = mypred(xC)
-# # a = 10
-#
     #decode
     start_time = time.time()
 
@@ -227,15 +236,15 @@ for ind_img in range(NumberImages):
 
     for idx_channel in range(3):
         xc_decode = (bz2.decompress(xc_encoded[idx_channel])).decode()
-        xc_decode = xc_decode.split('], [')
-        xc_decode[0] = xc_decode[0][2:]
-        xc_decode[len(xc_decode) - 1] = xc_decode[len(xc_decode) - 1][0:-2]
-        for i in range(8):
-            if xc_decode[i] == '':
-                xc_decode[i] = []
-            else:
-                xc_decode[i] = list(eval(xc_decode[i]))
-        xc = xc_decode
+        # xc_decode = xc_decode.split('], [')
+        # xc_decode[0] = xc_decode[0][2:]
+        # xc_decode[len(xc_decode) - 1] = xc_decode[len(xc_decode) - 1][0:-2]
+        # for i in range(len(xc_R)):
+        #     if xc_decode[i] == '':
+        #         xc_decode[i] = []
+        #     else:
+        #         xc_decode[i] = list(eval(xc_decode[i]))
+        xc = eval(xc_decode)
 
         xCw = xc[0:4]
         xCdc = xc[4:]
@@ -249,10 +258,10 @@ for ind_img in range(NumberImages):
         S = np.sum(Zw_r != 0)                           # selected number of non-zeros for each column
         sumS = np.sum(S)
 
-        Xr = np.concatenate((Qdc, np.zeros((N - 1, 3481))), axis=0)
+        Xr = np.concatenate((Qdc, np.zeros((N - 1, int(ad_h*ad_w//64)))), axis=0)
         Xa = np.dot(np.float64(Ds.D), Qw)
-        Ar = mycol2im(Xr + Xa, transform='m79', imsize=[472, 472], size=[8, 8])
-        Ar = Ar[0: 466, 0: 466]
+        Ar = mycol2im(Xr + Xa, transform='m79', imsize=[ad_h, ad_w], size=[8, 8])
+        Ar = Ar[0: h, 0: w]
         if idx_channel == 0:
             Ar_R = Ar
         if idx_channel == 1:
@@ -260,15 +269,15 @@ for ind_img in range(NumberImages):
         if idx_channel == 2:
             Ar_B = Ar
     Ar = np.stack((Ar_R, Ar_G, Ar_B), 2)
-    Ar = np.clip(Ar, -128, 127)
-    pic = Image.fromarray(np.uint8(Ar + 128))
+    Ar_withloss = np.clip(Ar, -128, 127)
+    pic = Image.fromarray(np.uint8(Ar_withloss + 128))
     pic.save('test_with_loss.png')
     loss_end_time = time.time()
     print('decode time with loss:')
     print((loss_end_time-loss_start_time)*1000)
 
     res = np.stack((res_R,res_G,res_B),2)
-    pic = Image.fromarray(np.uint8(Ar + res + 128))
+    pic = Image.fromarray(np.uint8(np.int8(Ar+0.5 * np.sign(Ar))+res)+128)
     pic.save('test_no_loss.png')
     end_time = time.time()
 
@@ -276,7 +285,8 @@ for ind_img in range(NumberImages):
     print('decoding time:')
     print((end_time - start_time) * 1000)
 
-    print(compute_psnr(np.uint8(img),np.uint8(Ar + 128)))
+    print(np.var(np.uint8(np.int8(Ar+0.5 * np.sign(Ar))+res+128) - np.uint8(img)))
+    print(compute_psnr(np.uint8(img),np.uint8(Ar_withloss + 128)))
 
 
 # # test on RGB

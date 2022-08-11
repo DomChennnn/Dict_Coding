@@ -56,7 +56,10 @@ def mypred(inn, nofS=None, verbose=None):
             print('Actual size of A overrule input given by ''size'' or ''M'' option')
 
         M, N = X.shape
-        xrange = np.power(2, np.ceil(np.log2(np.max(X) - np.min(X))))
+        if np.max(X) - np.min(X) == 0:
+            xrange = 0.1
+        else:
+            xrange = np.power(2, np.ceil(np.log2(np.max(X) - np.min(X))))
         if verbose:
             print(['mypred: from ', str(M), 'x', str(N),
                    ' matrix/image (xrange = ', str(xrange),
@@ -70,7 +73,7 @@ def mypred(inn, nofS=None, verbose=None):
                 print('mypred: just use DPCM here.')
 
             X[:, 1::2] = np.flipud(X[:, 1::2])
-            ut = [[M, np.log2(xrange), 1], [X(1), np.diff(X)]]
+            ut = [[M, np.log2(xrange), 1], (np.insert(np.diff(X.reshape((-1,1),order = 'F'), axis=0),0,X[0][0],axis=0)).tolist()]
             return ut
 
         Y = np.zeros((M, N))
@@ -288,12 +291,13 @@ def mypred(inn, nofS=None, verbose=None):
             # may be extended in future versions
             if verbose:
                 print('mypred: just use DPCM here.')
-            X = xC[1].reshape((M, N))
+            X = np.array(xC[1])
             for i in range(1, M * N):
                 X[i] = X[i] + X[i - 1]
+            X = X.reshape((M, N),order='F')
             X[:, 1::2] = np.flipud(X[:, 1::2])
             ut = X
-            return
+            return ut
 
         # The 'normal' decoding
         vLim_temp = [np.array(xC[0][3:]).reshape(1, int((len(xC[0]) - 3))) * xrange / vLimRange]

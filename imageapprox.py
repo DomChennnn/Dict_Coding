@@ -293,7 +293,7 @@ def imageapprox(A, par):
             print(['  Sparseness factor is ', str((dcnz + sumS)),
                    '/', str(len(A)), ' = ', str((dcnz + sumS) / len(A)), '.'])
 
-        if (not adaptdelta):
+        if (not adaptdelta) or PSNRq>30:
             break
         ratios = [thr / dele, deldc / dele, thrdc / dele, dele]
         d = (PSNRbq - PSNRq)  # difference (=reduction) in PSNR due to quatizing
@@ -327,13 +327,15 @@ def imageapprox(A, par):
 
         if (verbose >= 1) and (dele == 0):
             print('No quantizing was done.')
-
     ## reshape
     if (len(eb) > 1):
         # estimate bits
         if Ds != None:  # a dictionary was used
             xCw = myreshape(Zw, method=2, verbose=0)
             xCdc = mypred(Zdc.reshape((int(Maa // 8), int(Naa // 8)), order='F'), nofS=3, verbose=0)
+            Zdc_r = mypred(xCdc)
+            # print(np.var(Zdc_r))
+            # print(np.var(Zdc_r-Zdc.reshape((int(Maa // 8), int(Naa // 8)), order='F')))
             xC = []
             for i_len in range(len(xCw) + len(xCdc)):
                 xC.append([])
