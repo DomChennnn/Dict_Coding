@@ -10,3 +10,8 @@ Java、Python3
 ```
 python3 Demo_CodingDict.py
 ```
+
+## 代码规范
+
+使用 black 格式化代码
+https://github.com/psf/black
