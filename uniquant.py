@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def uniquant(X, dele, thr, ymax=None):
+def uniquant(X, delta, thr, ymax=None):
     """
 
     uniquant    Uniform scalar quantizer (or inverse quantizer) with threshold
@@ -14,7 +14,7 @@ def uniquant(X, dele, thr, ymax=None):
     arguments:
     :param X    - the values to be quantized (or result after inverse
           quantizer), a vector or matrix with real values.
-    :param del  - delta i quantizer, size/width of all cells except zero-cell
+    :param delta  - delta i quantizer, size/width of all cells except zero-cell
     :param thr  - threshold value, width of zero cell is from -thr to +thr
     :param ymax - largest value for y, only used when quantizing
     :return Y    - the indexes for the quantizer cells, the bins are indexed as
@@ -24,18 +24,16 @@ def uniquant(X, dele, thr, ymax=None):
     S = np.sign(X)
     X = abs(X)
 
-    if ymax != None:
-        Y = np.floor((X - thr) / dele) + 1
-        if thr > dele:
+    if ymax is not None:
+        Y = np.floor((X - thr) / delta) + 1
+        if thr > delta:
             Y[Y < 0] = 0
         ymax = np.floor(ymax)
         Y[Y > ymax] = ymax
-    elif ymax == None:
+
+    if ymax is None:
         Y = np.zeros_like(X)
         I = np.nonzero(X)
-        Y[I] = X[I] * dele + (thr - dele / 2)
-    else:
-        print("uniquant error")
-    Y = Y * S
+        Y[I] = X[I] * delta + (thr - delta / 2)
 
-    return Y
+    return Y * S
