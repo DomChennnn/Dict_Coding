@@ -305,9 +305,7 @@ for ind_img in range(NumberImages):
         Zdc_r = mypred(xCdc)
         Zdc_r = (Zdc_r.T).reshape(1, -1)
 
-        Qdc = uniquant(
-            Zdc_r, deldc[idx_channel], thrdc[idx_channel]
-        )  # inverse quantizing
+        Qdc = uniquant(Zdc_r, deldc[idx_channel], thrdc[idx_channel])  # inverse quantizing
         Qw = uniquant(Zw_r, dele[idx_channel], thr[idx_channel])  # inverse quantizing
         dcnz = np.sum(Zdc_r != 0)  # number of non-zeros in DC
         S = np.sum(Zw_r != 0)  # selected number of non-zeros for each column
