@@ -1,5 +1,4 @@
 import numpy as np
-from PIL import Image
 import bz2
 
 from utils import test_Dict_par
@@ -7,13 +6,13 @@ from imageapprox import imageapprox
 
 # one channel test
 def test_Dict(img, Bitrate_JPEG, Ds):
-    #init
+    # init
     # img = Image.open(filename)
-    img = np.array(img,dtype=np.double)
+    img = np.array(img, dtype=np.double)
     img_hgt, img_wdt = img.shape
     numBits = Bitrate_JPEG.shape[1]
     psnr_val = np.zeros((1, numBits))
-    bpp_val = np.zeros((1,numBits))
+    bpp_val = np.zeros((1, numBits))
     cur_QP = 69
     im_128 = img - 128
 
@@ -23,15 +22,25 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     bestQP = cur_QP
     target_bpp = 0.2
     # target_bpp = Bitrate_JPEG[0, num]
-    par = test_Dict_par(dictionary = Ds, targetPSNR = 100 - cur_QP, dele = -18, qLimit = [0.4, 1.00], estimateBits = 'Huff06', ompMethod = 'mexOMP', verbose = 0)
-    #test_Dict_par is a dict in python
-    Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(im_128, par) #the main processing function
+    par = test_Dict_par(
+        dictionary=Ds,
+        targetPSNR=100 - cur_QP,
+        dele=-18,
+        qLimit=[0.4, 1.00],
+        estimateBits="Huff06",
+        ompMethod="mexOMP",
+        verbose=0,
+    )
+    # test_Dict_par is a dict in python
+    Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(
+        im_128, par
+    )  # the main processing function
 
     xc_encoded = bz2.compress((str(xC)).encode())
-    bits = len(xc_encoded)*8
+    bits = len(xc_encoded) * 8
 
     bestPSNR = PSNR
-    bpp_val_each = bits/(img_hgt*img_wdt)
+    bpp_val_each = bits / (img_hgt * img_wdt)
     cur_bpp = bpp_val_each
 
     if cur_bpp > target_bpp:
@@ -41,8 +50,8 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 
     dirchange = 0
 
-    #search for better results
-    while bestPSNR<30:
+    # search for better results
+    while bestPSNR < 30:
         # if cur_bpp > target_bpp:
         #     cur_QP = cur_QP + 1
         #     if dir1==-1:
@@ -61,13 +70,18 @@ def test_Dict(img, Bitrate_JPEG, Ds):
         #     break
         cur_QP = cur_QP - 1
 
-
-        par = test_Dict_par(dictionary=Ds, targetPSNR=100 - cur_QP, dele=-18, qLimit=[0.4, 1.00],
-                            estimateBits='Huff06', ompMethod='mexOMP', verbose=0)
+        par = test_Dict_par(
+            dictionary=Ds,
+            targetPSNR=100 - cur_QP,
+            dele=-18,
+            qLimit=[0.4, 1.00],
+            estimateBits="Huff06",
+            ompMethod="mexOMP",
+            verbose=0,
+        )
         Ar_now, PSNR_now, xC_now, dele, deldc, thr, thrdc = imageapprox(im_128, par)
 
-
-        if bestPSNR>PSNR_now:
+        if bestPSNR > PSNR_now:
             break
         else:
             Ar = Ar_now
@@ -105,8 +119,18 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     # img_Ar = Image.fromarray(np.uint8(Ar+res_Ar+128))
     # img_Ar.save('test_noloss.png')
 
-
-    return psnr_val, bpp_val,res_Ar ,xC, dele_fin, deldc_fin, thr_fin, thrdc_fin, xc_encoded, res_encoded
+    return (
+        psnr_val,
+        bpp_val,
+        res_Ar,
+        xC,
+        dele_fin,
+        deldc_fin,
+        thr_fin,
+        thrdc_fin,
+        xc_encoded,
+        res_encoded,
+    )
 
 
 #
