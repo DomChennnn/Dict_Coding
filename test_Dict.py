@@ -1,5 +1,5 @@
 import numpy as np
-import bz2 as zip_lib
+import zlib as zip_lib
 
 from utils import test_Dict_par
 from imageapprox import imageapprox

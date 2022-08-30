@@ -4,7 +4,7 @@ import scipy.io as scio
 import h5py
 import glob
 import time
-import bz2 as zip_lib
+import zlib as zip_lib
 from PIL import Image
 import math
 
