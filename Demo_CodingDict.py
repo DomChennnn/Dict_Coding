@@ -1,14 +1,15 @@
 import numpy as np
+import os
 import scipy.io as scio
 import h5py
 import glob
 import time
-import bz2
+import bz2 as zip_lib
 from PIL import Image
 import math
 
 from test_Dict import test_Dict
-from utils import Dictionarys
+from utils import Dictionarys, PROJECT_ROOT
 
 from mycol2im import mycol2im
 from uniquant import uniquant
@@ -59,7 +60,7 @@ def compute_psnr(img1, img2):
 # for i in range(8):
 #     xc[i] = list(xc[i])
 #
-# xc_encoded = bz2.compress((str(xc)).encode(), 9)
+# xc_encoded = zip.compress((str(xc)).encode(), 9)
 #
 # #dictionary encode
 # h, w = res.shape
@@ -68,7 +69,7 @@ def compute_psnr(img1, img2):
 # for i in range(len(res)):
 #     res_list.append(res[i, 0])
 #
-# res_encoded = bz2.compress((str(res_list)).encode(), 9)
+# res_encoded = zip.compress((str(res_list)).encode(), 9)
 # print(len(xc_encoded))
 # print((len(res_encoded) + len(xc_encoded)))
 # encode_end = time.time()
@@ -79,13 +80,13 @@ def compute_psnr(img1, img2):
 # start_time = time.time()
 #
 # #res decode
-# res_decode = (bz2.decompress(res_encoded)).decode()
+# res_decode = (zip.decompress(res_encoded)).decode()
 # res = eval(res_decode)
 # res = np.array(res)
 # res = res.reshape((h, w))
 #
 # #dictionary decode
-# xc_decode = (bz2.decompress(xc_encoded)).decode()
+# xc_decode = (zip.decompress(xc_encoded)).decode()
 # xc_decode = xc_decode.split('], [')
 # xc_decode[0] = xc_decode[0][2:]
 # xc_decode[len(xc_decode) - 1] = xc_decode[len(xc_decode) - 1][0:-2]
@@ -126,23 +127,23 @@ foldername = "GenerallImages"
 blk_size = 8
 transform = "m79"
 
-path_in = ".//Images//" + foldername + "//Test2//bmp_test//walking"  # Image dir path
-data = scio.loadmat(
-    ".//Dictionary//Dict_RLS_" + foldername + ".mat"
-)  # load Dictionary path
+path_in = os.path.join(PROJECT_ROOT, 'Images', foldername, 'Test2')  # Image dir path
+data = scio.loadmat(os.path.join(PROJECT_ROOT, 'Dictionary', "Dict_RLS_" + foldername + ".mat"))  # load Dictionary path
+
 D = data["dlsRLS"][0, 0][0]  # Dictionary
 
 N, K = D.shape
 L = 40000
 Ds = Dictionarys(D, K, N, L, transform)  # define Dictionary
-Dimg = glob.glob(path_in + "//**//*.bmp", recursive=True)  # Image path
+Dimg = glob.glob(os.path.join(path_in, "*.bmp"), recursive=True)  # Image path
 NumberImages = len(Dimg)
+print(NumberImages)
 
 Bitrate_JPEG = np.transpose(
-    h5py.File(".//Results//Bitrate_JPEG_" + foldername + ".mat", "r")["Bitrate_JPEG"]
+    h5py.File(os.path.join(PROJECT_ROOT, "Results", "Bitrate_JPEG_" + foldername + ".mat"), "r")["Bitrate_JPEG"]
 )  # load bitrate
 Quality_JPEG = np.transpose(
-    h5py.File(".//Results//Quality_JPEG_" + foldername + ".mat", "r")["Quality_JPEG"]
+    h5py.File(os.path.join(PROJECT_ROOT, "Results", "Quality_JPEG_" + foldername + ".mat"), "r")["Quality_JPEG"]
 )  # load quality
 
 numBit = Bitrate_JPEG.shape[1]
@@ -158,11 +159,7 @@ for ind_img in range(NumberImages):
     # img = Image.open(Dimg[ind_img]).convert('RGB')
     # ind_img = 48
     encode_start = time.time()
-    path = (
-        "C:\\dmcprojects\\Dict_Coding\\Images\\GenerallImages\\Test2\\bmp_test\\walking\\"
-        + str(ind_img)
-        + ".bmp"
-    )
+    path = os.path.join(path_in, str(ind_img)+ ".bmp")
     print(path)
     img = Image.open(path).convert("RGB")
     img = np.array(img, dtype=np.double)
@@ -210,9 +207,9 @@ for ind_img in range(NumberImages):
         xc_G[i] = list(xc_G[i])
         xc_B[i] = list(xc_B[i])
 
-    xc_encoded_R = bz2.compress((str(xc_R)).encode(), 9)
-    xc_encoded_G = bz2.compress((str(xc_G)).encode(), 9)
-    xc_encoded_B = bz2.compress((str(xc_B)).encode(), 9)
+    xc_encoded_R = zip_lib.compress((str(xc_R)).encode(), 9)
+    xc_encoded_G = zip_lib.compress((str(xc_G)).encode(), 9)
+    xc_encoded_B = zip_lib.compress((str(xc_B)).encode(), 9)
 
     # dictionary encode
     h, w = res_R.shape
@@ -239,9 +236,9 @@ for ind_img in range(NumberImages):
         res_list_G.append(res_G[0, i])
         res_list_B.append(res_B[0, i])
 
-    res_encoded_R = bz2.compress((str(res_list_R)).encode(), 9)
-    res_encoded_G = bz2.compress((str(res_list_G)).encode(), 9)
-    res_encoded_B = bz2.compress((str(res_list_B)).encode(), 9)
+    res_encoded_R = zip_lib.compress((str(res_list_R)).encode(), 9)
+    res_encoded_G = zip_lib.compress((str(res_list_G)).encode(), 9)
+    res_encoded_B = zip_lib.compress((str(res_list_B)).encode(), 9)
 
     print(len(xc_encoded_R) + len(xc_encoded_G) + len(xc_encoded_B))
     print(
@@ -260,9 +257,9 @@ for ind_img in range(NumberImages):
     start_time = time.time()
 
     # res decode
-    res_decode_R = (bz2.decompress(res_encoded_R)).decode()
-    res_decode_G = (bz2.decompress(res_encoded_G)).decode()
-    res_decode_B = (bz2.decompress(res_encoded_B)).decode()
+    res_decode_R = (zip_lib.decompress(res_encoded_R)).decode()
+    res_decode_G = (zip_lib.decompress(res_encoded_G)).decode()
+    res_decode_B = (zip_lib.decompress(res_encoded_B)).decode()
     res_R = eval(res_decode_R)
     res_G = eval(res_decode_G)
     res_B = eval(res_decode_B)
@@ -283,7 +280,7 @@ for ind_img in range(NumberImages):
     thr = [thr_R, thr_G, thr_B]
 
     for idx_channel in range(3):
-        xc_decode = (bz2.decompress(xc_encoded[idx_channel])).decode()
+        xc_decode = (zip_lib.decompress(xc_encoded[idx_channel])).decode()
         # xc_decode = xc_decode.split('], [')
         # xc_decode[0] = xc_decode[0][2:]
         # xc_decode[len(xc_decode) - 1] = xc_decode[len(xc_decode) - 1][0:-2]
@@ -375,9 +372,9 @@ for ind_img in range(NumberImages):
 #     xc_G[i] = list(xc_G[i])
 #     xc_B[i] = list(xc_B[i])
 #
-# xc_encoded_R = bz2.compress((str(xc_R)).encode(), 9)
-# xc_encoded_G = bz2.compress((str(xc_G)).encode(), 9)
-# xc_encoded_B = bz2.compress((str(xc_B)).encode(), 9)
+# xc_encoded_R = zip.compress((str(xc_R)).encode(), 9)
+# xc_encoded_G = zip.compress((str(xc_G)).encode(), 9)
+# xc_encoded_B = zip.compress((str(xc_B)).encode(), 9)
 #
 # #dictionary encode
 # h, w = res_R.shape
@@ -393,9 +390,9 @@ for ind_img in range(NumberImages):
 #     res_list_G.append(res_G[i, 0])
 #     res_list_B.append(res_B[i, 0])
 #
-# res_encoded_R = bz2.compress((str(res_list_R)).encode(), 9)
-# res_encoded_G = bz2.compress((str(res_list_G)).encode(), 9)
-# res_encoded_B = bz2.compress((str(res_list_B)).encode(), 9)
+# res_encoded_R = zip.compress((str(res_list_R)).encode(), 9)
+# res_encoded_G = zip.compress((str(res_list_G)).encode(), 9)
+# res_encoded_B = zip.compress((str(res_list_B)).encode(), 9)
 #
 # print(len(xc_encoded_R)+len(xc_encoded_G)+len(xc_encoded_B))
 # print(len(xc_encoded_R)+len(xc_encoded_G)+len(xc_encoded_B)+len(res_encoded_R)+len(res_encoded_G)+len(res_encoded_B))
@@ -407,9 +404,9 @@ for ind_img in range(NumberImages):
 # start_time = time.time()
 #
 # #res decode
-# res_decode_R = (bz2.decompress(res_encoded_R)).decode()
-# res_decode_G = (bz2.decompress(res_encoded_G)).decode()
-# res_decode_B = (bz2.decompress(res_encoded_B)).decode()
+# res_decode_R = (zip.decompress(res_encoded_R)).decode()
+# res_decode_G = (zip.decompress(res_encoded_G)).decode()
+# res_decode_B = (zip.decompress(res_encoded_B)).decode()
 # res_R = eval(res_decode_R)
 # res_G = eval(res_decode_G)
 # res_B = eval(res_decode_B)
@@ -428,7 +425,7 @@ for ind_img in range(NumberImages):
 # thr = [thr_R,thr_G,thr_B]
 #
 # for idx_channel in range(3):
-#     xc_decode = (bz2.decompress(xc_encoded[idx_channel])).decode()
+#     xc_decode = (zip.decompress(xc_encoded[idx_channel])).decode()
 #     xc_decode = xc_decode.split('], [')
 #     xc_decode[0] = xc_decode[0][2:]
 #     xc_decode[len(xc_decode) - 1] = xc_decode[len(xc_decode) - 1][0:-2]

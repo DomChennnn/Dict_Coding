@@ -1,4 +1,6 @@
-import numpy as np
+import os
+
+PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 #two python dict, just like C++ class
 class Dictionarys:

@@ -1,5 +1,5 @@
 import numpy as np
-import bz2
+import bz2 as zip_lib
 
 from utils import test_Dict_par
 from imageapprox import imageapprox
@@ -36,7 +36,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
         im_128, par
     )  # the main processing function
 
-    xc_encoded = bz2.compress((str(xC)).encode())
+    xc_encoded = zip_lib.compress((str(xC)).encode())
     bits = len(xc_encoded) * 8
 
     bestPSNR = PSNR
@@ -86,7 +86,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
         else:
             Ar = Ar_now
             xC = xC_now
-            xc_encoded = bz2.compress((str(xC)).encode())
+            xc_encoded = zip_lib.compress((str(xC)).encode())
             bits = len(xc_encoded) * 8
             bestPSNR = PSNR_now
             bpp_val_each = (bits) / (img_hgt * img_wdt)
@@ -99,7 +99,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     # res_Ar = np.int8(im_128 - np.clip(Ar,-128,127))
     res_Ar = np.int8((im_128 - Ar) + 0.5 * np.sign(im_128 - Ar))
 
-    res_encoded = bz2.compress((str(res_Ar)).encode())
+    res_encoded = zip_lib.compress((str(res_Ar)).encode())
 
     # rec = np.int8(Ar+0.5 * np.sign(Ar))+res_Ar
     # res = rec-im_128
@@ -110,7 +110,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
     # ori_list = []
     # for i in range(len(ori)):
     #     ori_list.append(ori[i, 0])
-    # ori_encoded = bz2.compress((str(ori_list)).encode())
+    # ori_encoded = zip_lib.compress((str(ori_list)).encode())
     # ori_bits = len(ori_encoded)
 
     # save img
@@ -152,7 +152,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     for i in range(3):
 #         Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(im_128[:,:,i], par)
 #
-#         xc_encoded = bz2.compress((str(xC)).encode())
+#         xc_encoded = zip_lib.compress((str(xC)).encode())
 #         bits = len(xc_encoded)*8
 #
 #         bestPSNR = PSNR
@@ -202,7 +202,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #                 continue
 #             else:
 #                 xC = xC_now
-#                 xc_encoded = bz2.compress((str(xC)).encode())
+#                 xc_encoded = zip_lib.compress((str(xC)).encode())
 #                 bits = len(xc_encoded) * 8
 #                 bestPSNR = PSNR_now
 #                 bpp_val_each = (bits) / (img_hgt * img_wdt)
@@ -224,7 +224,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     RGB = np.stack((R,G,B),2)
 #
 #     res_Ar = np.uint8(im_128 - RGB)
-#     res_encoded = bz2.compress((str(res_Ar)).encode())
+#     res_encoded = zip_lib.compress((str(res_Ar)).encode())
 #     res_bits = len(res_encoded) * 8
 #     print(res_bits+bits)
 #
@@ -264,7 +264,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     img_in = np.concatenate((im_128[:,:,0],im_128[:,:,1],im_128[:,:,2]),axis=0)
 #     Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(img_in, par)
 #
-#     xc_encoded = bz2.compress((str(xC)).encode())
+#     xc_encoded = zip_lib.compress((str(xC)).encode())
 #     bits = len(xc_encoded)*8
 #
 #     bestPSNR = PSNR
@@ -305,7 +305,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #         else:
 #             Ar = Ar_now
 #             xC = xC_now
-#             xc_encoded = bz2.compress((str(xC)).encode())
+#             xc_encoded = zip_lib.compress((str(xC)).encode())
 #             bits = len(xc_encoded) * 8
 #             bestPSNR = PSNR_now
 #             bpp_val_each = (bits) / (img_hgt * img_wdt)
@@ -322,7 +322,7 @@ def test_Dict(img, Bitrate_JPEG, Ds):
 #     RGB = np.stack((R,G,B),2)
 #
 #     res_Ar = np.uint8(im_128 - RGB)
-#     res_encoded = bz2.compress((str(res_Ar)).encode())
+#     res_encoded = zip_lib.compress((str(res_Ar)).encode())
 #
 #     img_Ar = Image.fromarray(np.uint8(np.clip(RGB,-128,127)+128))
 #     img_Ar.save('test_RGB.png')
