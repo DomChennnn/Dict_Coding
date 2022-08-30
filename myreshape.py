@@ -2,38 +2,37 @@ import numpy as np
 
 
 def myreshape(inn, method=None, verbose=None):
-    '''
-    myreshape       Reshape between matrix and cell array of sequences.
-    The sequences should be fitted for entropy coding, see estimateBits.m
-    If first argument is a cell array reshape is from cell array to matrix
-    else first argument should be matrix and reshape is from matrix to cell
-    array.
+    """
+        myreshape       Reshape between matrix and cell array of sequences.
+        The sequences should be fitted for entropy coding, see estimateBits.m
+        If first argument is a cell array reshape is from cell array to matrix
+        else first argument should be matrix and reshape is from matrix to cell
+        array.
 
-    use:
-    xC = myreshape(W, ...);
-    W  = myreshape(xC, ...);
+        use:
+        xC = myreshape(W, ...);
+        W  = myreshape(xC, ...);
+        ------------------------------------------------------------------------
+        :param or :return xC     cell array of integer sequences
+             size of W and method are stored as xC{1}, i.e [K,L,met]
+             more options may also be stored in xC{1}
+        :param or :return W      KxL matrix of integers, i.e. quantized transform coeffients
+             Options:
+        :param 'm' or 'method' gives the method to use, default 1
+             1 : my own variant of End-Of-Block (EOB) coding into several
+                 sequences. Suited for quantized transform (or wavelet)
+                 coefficients with 3 levels, i.e. size(W,1)=64.
+                 Additional arguments may be: 'sortRows', 'sDC'
+                 (Note, algorithm is slow for large W)
+             2 : index + value sequences, suited for sparse matrices with no
+                 DC component and size(W,1) might as well be large (ex. 440).
+             3 : is like method 1, with row sorted to match the order in 2D
+                 wavelet, i.e. myim2col (with wavelet transform mylwt2) or as
+                 lwt2 (inplace) followd by im2col. K = 16, 64, 256, 1024
+                 This is usually only better than method 1 for K = 256 or 1024
+        :param 'v' or 'verbose' to indicate verboseness, default 0
     ------------------------------------------------------------------------
-    :param or :return xC     cell array of integer sequences
-         size of W and method are stored as xC{1}, i.e [K,L,met]
-         more options may also be stored in xC{1}
-    :param or :return W      KxL matrix of integers, i.e. quantized transform coeffients
-         Options:
-    :param 'm' or 'method' gives the method to use, default 1
-         1 : my own variant of End-Of-Block (EOB) coding into several
-             sequences. Suited for quantized transform (or wavelet)
-             coefficients with 3 levels, i.e. size(W,1)=64.
-             Additional arguments may be: 'sortRows', 'sDC'
-             (Note, algorithm is slow for large W)
-         2 : index + value sequences, suited for sparse matrices with no
-             DC component and size(W,1) might as well be large (ex. 440).
-         3 : is like method 1, with row sorted to match the order in 2D
-             wavelet, i.e. myim2col (with wavelet transform mylwt2) or as
-             lwt2 (inplace) followd by im2col. K = 16, 64, 256, 1024
-             This is usually only better than method 1 for K = 256 or 1024
-    :param 'v' or 'verbose' to indicate verboseness, default 0
-------------------------------------------------------------------------
-    '''
-
+    """
 
     ## default options and get the options
     if method == None:
@@ -56,12 +55,23 @@ def myreshape(inn, method=None, verbose=None):
         del inn
         K, L = W.shape
         if verbose:
-            print(['myreshape: from ', str(K), 'x', str(L),
-                   ' matrix to cell array (method = ', str(method),
-                   ', sortrows = ', str(sortrows),
-                   ', largeLimit = ', str(largeLimit), ').'])
+            print(
+                [
+                    "myreshape: from ",
+                    str(K),
+                    "x",
+                    str(L),
+                    " matrix to cell array (method = ",
+                    str(method),
+                    ", sortrows = ",
+                    str(sortrows),
+                    ", largeLimit = ",
+                    str(largeLimit),
+                    ").",
+                ]
+            )
 
-        if (method == 2):  # coding of sparse W (non-zeros randomly  placed)
+        if method == 2:  # coding of sparse W (non-zeros randomly  placed)
             # into 4 sequences: info, values, indexes, large-indexes
             # A 'largeLimit' is used, values in seq 3 >= largeLimit are copied
             # to seq 4 and largeLimit is written into these positions in seq 3
@@ -92,9 +102,19 @@ def myreshape(inn, method=None, verbose=None):
         W = np.zeros((int(K), int(L)))
 
         if verbose:
-            print(['myreshape: from cell array (', str(len(xC)),
-                   ' seqences) to ', str(K), 'x', str(L),
-                   ' matrix (method = ', str(method), ').'])
+            print(
+                [
+                    "myreshape: from cell array (",
+                    str(len(xC)),
+                    " seqences) to ",
+                    str(K),
+                    "x",
+                    str(L),
+                    " matrix (method = ",
+                    str(method),
+                    ").",
+                ]
+            )
 
         for i in range(len(xC)):
             if type(xC[i]) != np.ndarray:

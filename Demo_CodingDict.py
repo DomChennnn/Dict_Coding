@@ -127,8 +127,10 @@ foldername = "GenerallImages"
 blk_size = 8
 transform = "m79"
 
-path_in = os.path.join(PROJECT_ROOT, 'Images', foldername, 'Test2')  # Image dir path
-data = scio.loadmat(os.path.join(PROJECT_ROOT, 'Dictionary', "Dict_RLS_" + foldername + ".mat"))  # load Dictionary path
+path_in = os.path.join(PROJECT_ROOT, "Images", foldername, "Test2")  # Image dir path
+data = scio.loadmat(
+    os.path.join(PROJECT_ROOT, "Dictionary", "Dict_RLS_" + foldername + ".mat")
+)  # load Dictionary path
 
 D = data["dlsRLS"][0, 0][0]  # Dictionary
 
@@ -140,10 +142,16 @@ NumberImages = len(Dimg)
 print(NumberImages)
 
 Bitrate_JPEG = np.transpose(
-    h5py.File(os.path.join(PROJECT_ROOT, "Results", "Bitrate_JPEG_" + foldername + ".mat"), "r")["Bitrate_JPEG"]
+    h5py.File(
+        os.path.join(PROJECT_ROOT, "Results", "Bitrate_JPEG_" + foldername + ".mat"),
+        "r",
+    )["Bitrate_JPEG"]
 )  # load bitrate
 Quality_JPEG = np.transpose(
-    h5py.File(os.path.join(PROJECT_ROOT, "Results", "Quality_JPEG_" + foldername + ".mat"), "r")["Quality_JPEG"]
+    h5py.File(
+        os.path.join(PROJECT_ROOT, "Results", "Quality_JPEG_" + foldername + ".mat"),
+        "r",
+    )["Quality_JPEG"]
 )  # load quality
 
 numBit = Bitrate_JPEG.shape[1]
@@ -159,7 +167,7 @@ for ind_img in range(NumberImages):
     # img = Image.open(Dimg[ind_img]).convert('RGB')
     # ind_img = 48
     encode_start = time.time()
-    path = os.path.join(path_in, str(ind_img)+ ".bmp")
+    path = os.path.join(path_in, str(ind_img) + ".bmp")
     print(path)
     img = Image.open(path).convert("RGB")
     img = np.array(img, dtype=np.double)
