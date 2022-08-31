@@ -47,7 +47,7 @@ def img_decode(path_in, path_out, Ds, mode=0):
 
             Zdc_r = mypred(xCdc)
 
-            Zdc_r = (Zdc_r.T).reshape(1, -1)
+            Zdc_r = Zdc_r.T.reshape(1, -1)
 
             Qdc = uniquant(
                 Zdc_r, deldc[idx_channel], thrdc[idx_channel]
