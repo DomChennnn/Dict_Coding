@@ -15,7 +15,7 @@ def img_decode(path_in, path_out, Ds, mode=0):
     path_in: the bin path
     path_out: the img path
     Ds: dictionary
-    mode: choose the compress mode, 0 for lossly and 1 for lossless
+    mode: choose the compress mode, 0 for lossy and 1 for lossless
     """
     if mode == 0:
         saved = open(path_in, mode="rb+")
