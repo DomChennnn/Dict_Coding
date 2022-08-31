@@ -130,9 +130,6 @@ def img_decode(path_in, path_out, Ds, mode=0):
             Qw = uniquant(
                 Zw_r, dele[idx_channel], thr[idx_channel]
             )  # inverse quantizing
-            dcnz = np.sum(Zdc_r != 0)  # number of non-zeros in DC
-            S = np.sum(Zw_r != 0)  # selected number of non-zeros for each column
-            sumS = np.sum(S)
 
             Xr = np.concatenate(
                 (Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0
