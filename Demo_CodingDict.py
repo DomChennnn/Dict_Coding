@@ -21,7 +21,6 @@ def compute_psnr(img1, img2):
 # init
 foldername = "GenerallImages"
 blk_size = 8
-transform = "m79"
 
 dir_in = os.path.join(PROJECT_ROOT, "Images", foldername, "Test2")  # Image dir path
 dir_bin = os.path.join(PROJECT_ROOT, "bins")  # bin dir path
@@ -34,7 +33,7 @@ D = data["dlsRLS"][0, 0][0]  # Dictionary
 
 N, K = D.shape
 L = 40000
-Ds = Dictionarys(D, K, N, L, transform)  # define Dictionary
+Ds = Dictionarys(D, K, N, L, transform="m79")  # define Dictionary
 Dimg = glob.glob(dir_in + "//**//*.bmp", recursive=True)  # Image path
 NumberImages = len(Dimg)
 
