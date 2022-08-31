@@ -5,7 +5,7 @@ import math
 import time
 import os
 
-from utils import Dictionarys, PROJECT_ROOT
+from utils import Dictionaries, PROJECT_ROOT
 from encode import img_encode
 from decode import img_decode
 
@@ -33,7 +33,7 @@ D = data["dlsRLS"][0, 0][0]  # Dictionary
 
 N, K = D.shape
 L = 40000
-Ds = Dictionarys(D, K, N, L, transform="m79")  # define Dictionary
+Ds = Dictionaries(D, K, N, L, transform="m79")  # define Dictionary
 Dimg = glob.glob(dir_in + "//**//*.bmp", recursive=True)  # Image path
 NumberImages = len(Dimg)
 

@@ -4,7 +4,7 @@ import struct
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
 # two python dict, just like C++ class
-class Dictionarys:
+class Dictionaries:
     def __init__(self, D, K, N, L, transform):
         self.D = D
         self.k = K
