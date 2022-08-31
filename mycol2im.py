@@ -37,7 +37,6 @@ def mycol2im(
     Nn = 0  # size of nei(neighborhood)
     Mi = 0
     Ni = 0  # increment
-    verbose = 0
 
     # get the options
     if imsize != None:
@@ -144,39 +143,12 @@ def mycol2im(
         M = np.prod(factors[0::2]) * Mi + Mn - Mi
         N = (L * Mi / (M - Mn + Mi)) * Ni + Nn - Ni
 
-    if verbose:
-        print(["mycol2im: Restored  image is ", str(M), "x", str(N)])
-
     # put the blocks into the image and taking average
     A = np.zeros((M, N))
     Ac = np.zeros((M, N))  # counts
     index = np.nonzero(nei)
     if not (L == ((A.shape[1] - Nn + 1) // Ni + 1) * ((A.shape[0] - Mn + 1) // Mi + 1)):
         print("Can still not make image size fit data X.")
-    if verbose:
-        print(
-            [
-                "neighborhood is ",
-                str(len(index[0])),
-                " pixels from ",
-                str(Mn),
-                "x",
-                str(Nn),
-                " block.",
-            ]
-        )
-        print(
-            [
-                "Get ",
-                str(L),
-                " columns using ",
-                "increment step ",
-                str(Mi),
-                " and ",
-                str(Ni),
-                ".",
-            ]
-        )
 
     block = np.zeros((Mn, Nn))
 

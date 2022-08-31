@@ -72,7 +72,6 @@ def myim2col(
     Nn = 0  # size of nei(neighborhood)
     Mi = 0
     Ni = 0  # increment
-    verbose = 0
 
     # get the options
     if transform != None:
@@ -175,38 +174,12 @@ def myim2col(
         Mi = Mn
         Ni = Nn
 
-    if verbose:
-        print(
-            "imageapprox: Input image is ",
-            str(A.shape[0]),
-            " x ",
-            str(A.shape[1]),
-            "of class",
-            A.dtype,
-        )
-
     # remove what is left and above offset, and perhaps adjust the size
     if (Mo > 0) or (No > 0):
-        if verbose:
-            print(
-                "Remove ", str(Mo), "left columns and ", str(No), "top rows from image"
-            )
         A = A[Mo:, No:]
 
     if tr != None:
-        if verbose:
-            print(
-                "Adjust image to fit ",
-                str(Ms),
-                "x",
-                str(Ns),
-                " blocks by method ",
-                amet,
-                ".",
-            )
         A = myimadjust(A, amet, [Ms, Ns])
-    if verbose:
-        print("adjust image is ", str(A.shape[0]), " x ", str(A.shape[1]))
 
     # do the transform
     A = mylwt2(A, tr, np.log2(Ms))
@@ -214,31 +187,6 @@ def myim2col(
     # find the blocks
     index = np.nonzero(nei)  # reshape to col(start from 0 to the num-1 of the matrix)
     L = ((A.shape[1] - Nn + 1) // Ni + 1) * ((A.shape[0] - Mn + 1) // Mi + 1)
-
-    if verbose:
-        print(
-            [
-                "neighborhood is ",
-                str(len(index)),
-                " pixels from ",
-                str(Mn),
-                "x",
-                str(Nn),
-                " block.",
-            ]
-        )
-        print(
-            [
-                "Get ",
-                str(L),
-                " columns using ",
-                "increment step ",
-                str(Mi),
-                " and ",
-                str(Ni),
-                ".",
-            ]
-        )
 
     X = np.zeros((len(index[0]), L))
     k = 0

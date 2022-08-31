@@ -1,5 +1,3 @@
-import time
-
 import numpy as np
 from scipy.sparse import csr_matrix
 import copy
@@ -82,19 +80,12 @@ def imageapprox(A, par):
     """
     # default options
     peak = 255
-    tr = ""  # transform
     Ms = 0
     Ns = 0  # size (of transform)
-    amet = "extend"  # adjust method in myim2col(as in myimadjust)
-    tpsnr = 0  # target PSNR
     tsf = 0.1  # or target sparseness factor
-    dele = 0
     thr = 0
     deldc = 0
     thrdc = 0
-    verbose = 0
-    qlimit = [0.35, 0.4, 0.45]
-    eb = ""
 
     # get the options
     dele = par.dele
@@ -150,35 +141,6 @@ def imageapprox(A, par):
     deldc = np.abs(deldc)
     thrdc = np.abs(thrdc)
 
-    if verbose:
-        print(" ")
-        print(
-            "imageapprox: Input image is ",
-            str(A.shape[0]),
-            " x ",
-            str(A.shape[1]),
-            "of class",
-            A.dtype,
-        )
-        print(
-            "Arguments are: transform = ",
-            tr,
-            ", tPSNR = ",
-            str(tpsnr),
-            ", peak = ",
-            str(peak),
-            ", tsf = ",
-            str(tsf),
-            ", del = ",
-            str(dele),
-            ", thr = ",
-            str(thr),
-            ", delDC = ",
-            str(deldc),
-            ", thrDC = ",
-            str(thrdc),
-        )
-
     # do the transform and make the column vectors from the image
     Ma, Na = A.shape
     X = myim2col(
@@ -201,37 +163,6 @@ def imageapprox(A, par):
         if Maa * Naa != N * L:
             raise IndexError("imageapprox: can not match size of A and X")
 
-    if verbose:
-        print(
-            [
-                "Image A of size ",
-                str(Ma),
-                "x",
-                str(Na),
-                " (",
-                str(Ma * Na),
-                " pixels)",
-                " was divided into blocks of size ",
-                str(Ms),
-                "x",
-                str(Ns),
-                " (transform: ",
-                tr,
-                "),",
-            ]
-        )
-        print(
-            [
-                "and then arranged into X of size ",
-                str(N),
-                "x",
-                str(L),
-                " (",
-                str(N * L),
-                " elements).",
-            ]
-        )
-
     # Extract DC both for transform only and (transform and) dictionary
     if tr == None:  # extract DC as first row ( or mean)
         Xdc = np.sqrt(N) * np.mean(X)
@@ -242,79 +173,32 @@ def imageapprox(A, par):
         X[0, :] = np.zeros((1, L))
         Xr = np.concatenate((Xdc, np.zeros((N - 1, L))), axis=0)
 
-    Ar = mycol2im(Xr, transform=tr, imsize=[Maa, Naa], size=[Ms, Ns])
-
-    if imageadjust:
-        Ar = Ar[0:Ma, 0:Na]
-    R = A - Ar
-    PSNRdc = 10 * np.log10(((Ma * Na) / (np.sum(R * R) / (peak * peak))))
-    if verbose:
-        print(
-            [
-                "Using only the ",
-                str(L),
-                " elements in the DC component, PSNRdc = ",
-                str(PSNRdc),
-                ".",
-            ]
-        )
-
     # do a sparse representation of X using the dictionary or thresholding
     if Ds != None:
-        viktigKlasse = "mpv2.DictionaryLearning"
         if tpsnr > 0:
             tSSE = ((Ma * Na) * peak * peak) * np.power(10, (-tpsnr / 10))
-            if verbose:
-                print(
-                    [
-                        "imageapprox calls sparseapprox using",
-                        " tSSE = ",
-                        str(tSSE),
-                        " (target PSNR = ",
-                        str(tpsnr),
-                        ")",
-                    ]
-                )
 
-            # tic = time.time()
             W = sparseapprox(
                 X,
                 Ds.D,
                 "javaORMP",
                 targetNonZeros=N / 2,
                 tSSE=tSSE,
-                v=max(0, verbose - 1),
             )
-            # tac = time.time()
-            # print(tac-tic)
         elif tsf < 1:
             tnnz = np.floor(Ma * Na * tsf) - L
-            if verbose:
-                print(
-                    [
-                        "imageapprox call sparseapprox using",
-                        " tnz = ",
-                        str(tnnz),
-                        " (target sparseness factor = ",
-                        str(tsf),
-                        ")",
-                    ]
-                )
-            W = sparseapprox(X, Ds.D, "GMP", targetNonZeros=tnnz, v=max(0, verbose - 1))
+            W = sparseapprox(X, Ds.D, "GMP", targetNonZeros=tnnz)
             W = sparseapprox(
                 X,
                 Ds.D,
                 "javaORMP",
                 targetNonZeros=sum(W != 0),
                 globalRD=1,
-                v=max(0, verbose - 1),
             )
             W = csr_matrix(W)
         else:
             print("imageapprox do not call sparseapprox (use W = D\X;).")
             W = Ds.D / X
-        S = sum(W != 0)
-        sumS = sum(S)
         Xa = np.dot(np.float64(Ds.D), W)
         Ar = mycol2im(Xr + Xa, transform=tr, imsize=[Maa, Naa], size=[Ms, Ns])
         if imageadjust:
@@ -323,15 +207,6 @@ def imageapprox(A, par):
         PSNRbq = 10 * np.log10(
             (((Ma * Na) * peak * peak) / sum(sum(R * R)))
         )  # sparse rep
-        if verbose:  # display results so far
-            print(
-                [
-                    "After dictionary D is used: non-zeros including DC is ",
-                    str(sumS + L),
-                    " and PSNR = ",
-                    str(PSNRbq, 6),
-                ]
-            )
 
     ## Quantizing and find restored image
     adaptdelta = False
@@ -345,43 +220,9 @@ def imageapprox(A, par):
             Zw = uniquant(W, dele, thr, 2000)
             Qdc = uniquant(Zdc, deldc, thrdc)  # inverse quantizing
             Qw = uniquant(Zw, dele, thr)  # inverse quantizing
-            dcnz = np.sum(Zdc != 0)  # number of non-zeros in DC
-            S = np.sum(Zw != 0)  # selected number of non-zeros for each column
-            sumS = np.sum(S)
-            if verbose >= 2:
-                print(["Quantizing loop number ", str(dummycounter), ":"])
-                print(
-                    [
-                        "  Total number of non-zeros after quantizing ",
-                        str(dcnz + sumS),
-                        " (Xdc:",
-                        str(dcnz),
-                        ", W:",
-                        str(sumS),
-                        "), sparseness ",
-                        str((dcnz + sumS) / len(A)),
-                        ".",
-                    ]
-                )
-                print(
-                    [
-                        "  using del = ",
-                        str(dele),
-                        ", thr = ",
-                        str(thr),
-                        ", deldc = ",
-                        str(deldc),
-                        ", thrdc = ",
-                        str(thrdc),
-                        ".",
-                    ]
-                )
         else:  # no quantizing  (note Zdc and Zw are not defined)
             Qw = W
             Qdc = Xdc
-            dcnz = np.sum(Xdc != 0)  # number of non-zeros in DC
-            S = np.sum(W != 0)  # selected number of non-zeros for each column
-            sumS = np.sum(S)
 
         if tr == None:  # find Xr from Qdc
             Xr = np.ones((N, 1)) * (Qdc / np.sqrt(N))
@@ -401,29 +242,6 @@ def imageapprox(A, par):
             (((Ma * Na) * peak * peak) / sum(sum(R * R)))
         )  # after quant.
 
-        if verbose >= 2:
-            if dele > 0:
-                print(
-                    [
-                        "  Quantizing reduced PSNR with ",
-                        str(PSNRbq - PSNRq),
-                        " dB to PSNRq = ",
-                        str(PSNRq),
-                        ".",
-                    ]
-                )
-            print(
-                [
-                    "  Sparseness factor is ",
-                    str((dcnz + sumS)),
-                    "/",
-                    str(len(A)),
-                    " = ",
-                    str((dcnz + sumS) / len(A)),
-                    ".",
-                ]
-            )
-
         if (not adaptdelta) or PSNRq > 30:
             break
         ratios = [thr / dele, deldc / dele, thrdc / dele, dele]
@@ -438,64 +256,10 @@ def imageapprox(A, par):
             [2.5, 1.5, 0.5, 0.3, 0.1, 0.08, 0.09, 0.1],
         )
         dele = np.power(10, (f * (qlimit[1] - d))) * dele
-        if verbose >= 2:
-            print(
-                [
-                    "  del was ",
-                    str(ratios[3]),
-                    ", d (PSNRbq-PSNRq) = ",
-                    str(d),
-                    ", f = ",
-                    str(f),
-                    " qlimit(2) = ",
-                    str(qlimit[1]),
-                ]
-            )
-            print(
-                [
-                    "  In the end of quantizing loop ",
-                    str(dummycounter),
-                    " del was changed to ",
-                    str(dele),
-                ]
-            )
-
         thr = dele * ratios[0]
         deldc = dele * ratios[1]
         thrdc = dele * ratios[2]
 
-        if (verbose == 1) and (dele > 0):
-            print(
-                [
-                    "Quantizing using del = ",
-                    str(dele),
-                    ", thr = ",
-                    str(thr),
-                    ", deldc = ",
-                    str(deldc),
-                    ", thrdc = ",
-                    str(thrdc),
-                    ".",
-                ]
-            )
-            print(
-                [
-                    "  ==>  nonzeros = (",
-                    str(dcnz),
-                    "+",
-                    str(sumS),
-                    ") = ",
-                    str(dcnz + sumS),
-                    ", sparseness = ",
-                    str((dcnz + sumS) / len(A)),
-                    " and PSNR = ",
-                    str(PSNRq),
-                    ".",
-                ]
-            )
-
-        if (verbose >= 1) and (dele == 0):
-            print("No quantizing was done.")
     ## reshape
     if len(eb) > 1:
         # estimate bits
@@ -506,9 +270,6 @@ def imageapprox(A, par):
                 nofS=3,
                 verbose=0,
             )
-            Zdc_r = mypred(xCdc)
-            # print(np.var(Zdc_r))
-            # print(np.var(Zdc_r-Zdc.reshape((int(Maa // 8), int(Naa // 8)), order='F')))
             xC = []
             for i_len in range(len(xCw) + len(xCdc)):
                 xC.append([])

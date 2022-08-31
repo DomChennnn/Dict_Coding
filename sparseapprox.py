@@ -11,17 +11,9 @@ def sparseapprox(
     targetNonZeros=None,
     targetRelativeError=None,
     targetAbsoluteError=None,
-    numberOfIterations=None,
-    p=None,
-    l=None,
-    nC=None,
-    paramSPAMS=None,
     globalRD=None,
-    doOP=None,
-    GMPLS=None,
     tSSE=None,
     targetSNR=None,
-    v=None,
 ):
 
     """
@@ -112,25 +104,9 @@ def sparseapprox(
     norm2X = np.sqrt(np.sum(X * X, axis=0))  # ||x(i)||_2     1xL
     W = np.zeros((K, L))  # the weights (coefficients)
     tnz = np.ceil(N / 2) * np.ones((1, L))  # target number of non-zeros
-    thrActive = False  # is set to true if tnz, tre or tae is given
-    # and used for methods: pinv, backslash, linprog and
-    # FOCUSS
     tae = None
-    if doOP == None:
-        doOP = True  # do Orthogonal Projection when thresholding
-    else:
-        doOP = doOP
     relLim = 1e-6
     tre = relLim * np.ones((1, L))  # target relative error: ||r|| <= tre*||x||
-    nComb = 20  # used only in javaPS
-    nIt = 20  # used only in FOCUSS
-    pFOCUSS = 0.5  # used only in FOCUSS
-    lambdaFOCUSS = 0  # used only in FOCUSS
-    deltaWlimit = 1e-8  # used only in FOCUSS
-    if GMPLS == None:
-        GMPLoopSize = 0  # used only in GMP
-    else:
-        GMPLoopSize = max(np.floor(GMPLS), 2)
 
     if globalRD == None:
         globalReDist = 0  # may be used with javaORMP
@@ -141,10 +117,6 @@ def sparseapprox(
         targetSSE = 0  # may be used with javaORMP
     else:
         targetSSE = min(max(tSSE, 0), np.sum(X * X))
-    verbose = 0
-    done = False
-    javaClass = "mpv2.MatchingPursuit"  # the important java class
-    spams_mex_file = "mexLasso"  # one of the used SPAMS files
 
     # get the options
     if targetNonZeros != None:
@@ -162,7 +134,6 @@ def sparseapprox(
                         "targetNonZeros",
                     ]
                 )
-        thrActive = True
 
     if targetRelativeError != None:
         if len(targetRelativeError) == 1:
@@ -177,7 +148,6 @@ def sparseapprox(
                     "targetRelativeError",
                 ]
             )
-        thrActive = True
 
     if targetAbsoluteError != None:
         if len(targetAbsoluteError) == 1:
@@ -192,51 +162,12 @@ def sparseapprox(
                     "targetAbsoluteError",
                 ]
             )
-        thrActive = True
-
-    if numberOfIterations != None:
-        if len(numberOfIterations) == 1:
-            nIt = max(np.floor(numberOfIterations), 1)
-        else:
-            print(
-                [
-                    "sparseapprox",
-                    ": illegal size of value for option ",
-                    "numberOfIterations",
-                ]
-            )
-
-    if p != None:
-        if len(p) == 1:
-            pFOCUSS = min(p, 1)
-        else:
-            print(["sparseapprox", ": illegal size of value for option ", "pFOCUSS"])
-
-    if l != None:
-        if len(l) == 1:
-            lambdaFOCUSS = abs(l)
-        else:
-            print(
-                ["sparseapprox", ": illegal size of value for option ", "lambdaFOCUSS"]
-            )
-
-    if nC != None:
-        if len(nC) == 1:
-            nComb = max(np.floor(nC), 2)
-        else:
-            print(["sparseapprox", ": illegal size of value for option ", "nComb"])
-
-    if paramSPAMS != None:
-        paramSPAMS = paramSPAMS
 
     if targetSNR != None:
         if type(targetSNR) == float:
             targetSSE = 10 ^ (-abs(targetSNR) / 10) * sum(sum(X * X))
         else:
             print(["sparseapprox", ": illegal size of value for option ", "targetSNR"])
-
-    if v != None:
-        verbose = v
 
     if tae != None:  # if both exist 'tae' overrules 'tre'
         tre = tae / norm2X
@@ -276,27 +207,8 @@ def sparseapprox(
             # tnz = 2*ones(1,L)
             tre = np.sqrt(targetSSE / L) / norm2X
             globalReDist = 2
-            textMethod = [
-                "javaORMP with global distribution of non-zeros ",
-                "given target SSE (or SNR).",
-            ]
-        elif globalReDist == 1:
-            textMethod = [
-                "javaORMP with global distribution of non-zeros ",
-                "keeping the total number of non-zeros fixed.",
-            ]
-        elif globalReDist == 2:
-            textMethod = [
-                "javaORMP with global distribution of non-zeros ",
-                "keeping the total SSE fixed.",
-            ]
-        else:
-            textMethod = "Order Recursive Matching Pursuit, Java implementation."
-        #
-        # below is the javaORMP lines
-        if verbose:
-            print(["sparseapprox", ": ", textMethod])
 
+        # below is the javaORMP lines
         for j in range(L):
             if (tnz[0, j] > 0) and (tre[j] < 1):
                 W[:, j] = jMP.vsORMP(X[:, j], np.int32(tnz[0, j]), tre[j])
@@ -313,7 +225,6 @@ def sparseapprox(
             R = np.float32(X - np.dot(D, W))  # representation error
             S = sum(W != 0)  # selected number of non-zeros for each column
             SE = sum(R * R)  # squared error for each (when S is selected)
-            sumSinit = sum(S)
             SSE = np.float32(sum(SE))
             SSEinit = SSE  # store initial SSE
             Sp1 = S + 1  # selected number of non-zeros plus one
@@ -358,16 +269,6 @@ def sparseapprox(
 
             if targetSSE > 0:
                 if SSEinit > targetSSE:  # part 2
-                    if verbose:
-                        print(
-                            [
-                                "(part 2 add atoms, target SSE = ",
-                                str(targetSSE),
-                                " and initial SSE = ",
-                                str(SSEinit),
-                                ")",
-                            ]
-                        )
                     while SSE > targetSSE:
                         j = jdec  # an atom is added to vector j
                         addedS = addedS + 1
@@ -388,16 +289,6 @@ def sparseapprox(
 
                     valinc, jinc = np.min(SEinc), np.argmax(SEdec)
                 elif (SSEinit + valinc) < targetSSE:  # part 3
-                    if verbose:
-                        print(
-                            [
-                                "(part 3 remove atoms, target SSE = ",
-                                str(targetSSE),
-                                " and initial SSE = ",
-                                str(SSEinit),
-                                ")",
-                            ]
-                        )
                     while (SSE + valinc) < targetSSE:
                         j = jinc  # an atom is removed from vector j
                         removedS = removedS + 1
@@ -426,16 +317,15 @@ def sparseapprox(
 
                     valdec, jdec = np.max(SEdec), np.argmax(SEdec)
                 else:  #
-                    if verbose:
-                        print(
-                            [
-                                "(target SSE = ",
-                                str(targetSSE),
-                                " is close to initial SSE = ",
-                                str(SSEinit),
-                                ")",
-                            ]
-                        )
+                    print(
+                        [
+                            "(target SSE = ",
+                            str(targetSSE),
+                            " is close to initial SSE = ",
+                            str(SSEinit),
+                            ")",
+                        ]
+                    )
 
             else:
                 targetSSE = SSEinit
@@ -485,5 +375,4 @@ def sparseapprox(
                     if globalReDist == 1:
                         break
                 valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # next now
-        done = True
     return W
