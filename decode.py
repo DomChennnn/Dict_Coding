@@ -15,7 +15,7 @@ def img_decode(path_in, path_out, Ds, mode=0):
     path_in: the bin path
     path_out: the img path
     Ds: dictionary
-    mode: choose the compress mode, 0 for lossly and 1 for lossless
+    mode: choose the compress mode, 0 for lossy and 1 for lossless
     """
     if mode == 0:
         saved = open(path_in, mode="rb+")
@@ -47,7 +47,7 @@ def img_decode(path_in, path_out, Ds, mode=0):
 
             Zdc_r = mypred(xCdc)
 
-            Zdc_r = (Zdc_r.T).reshape(1, -1)
+            Zdc_r = Zdc_r.T.reshape(1, -1)
 
             Qdc = uniquant(
                 Zdc_r, deldc[idx_channel], thrdc[idx_channel]
@@ -55,9 +55,6 @@ def img_decode(path_in, path_out, Ds, mode=0):
             Qw = uniquant(
                 Zw_r, dele[idx_channel], thr[idx_channel]
             )  # inverse quantizing
-            dcnz = np.sum(Zdc_r != 0)  # number of non-zeros in DC
-            S = np.sum(Zw_r != 0)  # selected number of non-zeros for each column
-            sumS = np.sum(S)
 
             Xr = np.concatenate(
                 (Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0
@@ -133,16 +130,13 @@ def img_decode(path_in, path_out, Ds, mode=0):
             Qw = uniquant(
                 Zw_r, dele[idx_channel], thr[idx_channel]
             )  # inverse quantizing
-            dcnz = np.sum(Zdc_r != 0)  # number of non-zeros in DC
-            S = np.sum(Zw_r != 0)  # selected number of non-zeros for each column
-            sumS = np.sum(S)
 
             Xr = np.concatenate(
                 (Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0
             )
             Xa = np.dot(np.float64(Ds.D), Qw)
 
-            Ar = mycol2im(Xr + Xa, transform="m79", imsize=[ad_h, ad_w], size=[8, 8])
+            Ar = mycol2im(Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8])
             Ar = Ar[0:h, 0:w]
             if idx_channel == 0:
                 Ar_R = Ar

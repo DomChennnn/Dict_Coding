@@ -5,7 +5,7 @@ import math
 import time
 import os
 
-from utils import Dictionarys, PROJECT_ROOT
+from utils import Dictionaries, PROJECT_ROOT
 from encode import img_encode
 from decode import img_decode
 
@@ -21,7 +21,6 @@ def compute_psnr(img1, img2):
 # init
 foldername = "GenerallImages"
 blk_size = 8
-transform = "m79"
 
 dir_in = os.path.join(
     PROJECT_ROOT, "Images", foldername, "Test2", "bmp_test", "staticpics"
@@ -36,7 +35,7 @@ D = data["dlsRLS"][0, 0][0]  # Dictionary
 
 N, K = D.shape
 L = 40000
-Ds = Dictionarys(D, K, N, L, transform)  # define Dictionary
+Ds = Dictionaries(D, K, N, L, transform="m79")  # define Dictionary
 Dimg = glob.glob(dir_in + "//**//*.bmp", recursive=True)  # Image path
 NumberImages = len(Dimg)
 
@@ -51,7 +50,7 @@ for ind_img in range(NumberImages):
     img_decode(path_bin, path_rec, Ds, 0)
     decode_end_time = time.time()
 
-    print(ind_img)
+    print('idx =', ind_img)
     print((encode_end_time - encode_start_time) * 1000)
     print((decode_end_time - encode_end_time) * 1000)
     bmpsize = os.path.getsize(path_img)
