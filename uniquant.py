@@ -36,4 +36,5 @@ def uniquant(X, delta, thr, y_max=None):
         I = np.nonzero(X)
         Y[I] = X[I] * delta + (thr - delta / 2)
 
-    return Y * S
+    res = np.array(Y * S, np.int)
+    return res

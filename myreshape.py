@@ -38,7 +38,7 @@ def myreshape(inn, method=None, verbose=None):
     if method == None:
         method = 1
     else:
-        method = max(1, np.floor(method))
+        method = max(1, method)
     sortrows = True
     largeLimit = 400
     if verbose == None:
@@ -51,7 +51,9 @@ def myreshape(inn, method=None, verbose=None):
 
     ##start of function
     if type(inn) == np.ndarray:  # encoding
-        W = np.float64(inn)  # make sure we can calculate on W
+        # W = np.float64(inn)  # make sure we can calculate on W
+        # W = np.float32(inn)
+        W = np.array(inn, np.int8)
         del inn
         K, L = W.shape
         if verbose:
@@ -99,7 +101,7 @@ def myreshape(inn, method=None, verbose=None):
         K = xC[0][0]
         L = xC[0][1]
         method = xC[0][2]
-        W = np.zeros((int(K), int(L)))
+        W = np.zeros((int(K), int(L)), np.float32)
 
         if verbose:
             print(

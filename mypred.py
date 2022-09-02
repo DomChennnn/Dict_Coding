@@ -32,7 +32,7 @@ def mypred(inn, nofS=None, verbose=None):
 
     M = 0
     N = 0
-    w = (np.array([3, 3, 2, 2], np.float64)).T
+    w = (np.array([3, 3, 2, 2])).T
 
     if nofS == None:
         nofS = 3
@@ -51,7 +51,8 @@ def mypred(inn, nofS=None, verbose=None):
 
     if type(inn) == np.ndarray:
         # start encoding
-        X = np.float64(inn)  # make sure we can calculate on X
+        # X = np.float64(inn)  # make sure we can calculate on X
+        X = np.array(inn)
         del inn
         if ((M != 0) and (M != X.shape[0])) or ((N != 0) and (N != X.shape[1])):
             print(
@@ -101,8 +102,8 @@ def mypred(inn, nofS=None, verbose=None):
             ]
             return ut
 
-        Y = np.zeros((M, N))
-        V = np.zeros((M, N))
+        Y = np.zeros((M, N), np.int16)
+        V = np.zeros((M, N), np.float32)
         i = 0  # first row
         j = 0
         v = xrange / 8
@@ -201,6 +202,8 @@ def mypred(inn, nofS=None, verbose=None):
                 Y[i, j] = x2
             #
             for j in range(2, N):
+                if i == 7 and j == 20:
+                    a = 10
                 # *** Block, for i>2,j>2, lines identical in encode/decode ****
                 x7 = X[i - 2, j - 2]
                 x8 = X[i - 2, j - 1]
@@ -235,7 +238,7 @@ def mypred(inn, nofS=None, verbose=None):
                         ],
                     ]
                 )  # *
-                lib_search = np.dot(d, w)
+                lib_search = np.round(np.dot(d, w), 8)
                 temp, pNo = np.min(lib_search), np.argmin(lib_search)  # *
 
                 # if (lib_search[0] ==lib_search[4]) and lib_search[0] == temp:
@@ -244,7 +247,7 @@ def mypred(inn, nofS=None, verbose=None):
                 # #    print(lib_search)
                 # #    print('('+str(i)+','+str(j)+')')
 
-                v = np.mean(d[pNo, :])  # *
+                v = np.round(np.mean(d[pNo, :]), 8)  # *
                 # *************************************************************
                 V[i, j] = v
                 if pNo == 0:
@@ -257,10 +260,6 @@ def mypred(inn, nofS=None, verbose=None):
                     Y[i, j] = x4
                 if pNo == 4:
                     Y[i, j] = np.floor((3 * x1 + 2 * x2) / 5 + 0.45)
-
-        # this is just for test
-        # Y[27,48] = 13
-        # V[27,48] = 10.55
 
         xC = []
         for i in range((nofS + 1).astype(int)):
@@ -277,22 +276,22 @@ def mypred(inn, nofS=None, verbose=None):
             * vLimRange
             / xrange
         ).T
-        xC[0] = [M, np.log2(xrange), nofS, vLim]
+        vLim = vLim.astype(int)
+        xC[0] = [M, np.int(np.log2(xrange)), np.int(nofS), vLim]
         vLim_copy = vLim.copy()
 
         # # limits to use
         vLim = xC[0][3] * xrange / vLimRange
         vLim = np.append(vLim, np.inf)
         Sekv = np.zeros((M, N))
+        V = np.float16(np.round(V, 8))
         for i in range(M):
             for j in range(N):
                 Sekv[i, j] = np.where(V[i, j] <= vLim)[0][0]
-        # Sekv[0,2] = 1
 
         # # make Y prediction error (and transpose it to get elements orderd by row)
         Y = X - Y
-        # # sequence also transpose   d
-        # Sekv = Sekv
+        # # sequence also transposed
         for i in range(1, (nofS + 1).astype(int)):
             xC[i] = Y[Sekv == (i - 1)]
             # xC{i} = makePositive( Y(Sekv==(i-1)) )
@@ -497,7 +496,8 @@ def mypred(inn, nofS=None, verbose=None):
                 X[i, j] = x2 + p
 
             for j in range(2, N):  # column 3 and more
-                #
+                if i == 7 and j == 19:
+                    a = 10
                 # *** Block, for i>2,j>2, lines identical in encode/decode ****
                 x7 = X[i - 2, j - 2]
                 x8 = X[i - 2, j - 1]
@@ -533,14 +533,16 @@ def mypred(inn, nofS=None, verbose=None):
                         ],
                     ]
                 )  # *
-                temp, pNo = np.min(np.dot(d, w)), np.argmin(np.dot(d, w))  # *
-                v = np.mean(d[pNo, :])  # *
+                lib_search = np.round(np.dot(d, w), 8)
+                temp, pNo = np.min(lib_search), np.argmin(lib_search)  # *
+                v = np.round(np.mean(d[pNo, :]), 8)  # *
                 # *************************************************************
                 Sekv = np.where(v <= vLim)[0][0] + 1
                 xCi[Sekv] = xCi[Sekv] + 1
 
                 # print(Sekv)
                 # print(int(xCi[Sekv]) - 1)
+                # print(str(i)+','+str(j))
                 p = xC[Sekv][int(xCi[Sekv]) - 1]
 
                 if pNo == 0:
