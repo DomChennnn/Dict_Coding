@@ -23,7 +23,9 @@ foldername = "GenerallImages"
 blk_size = 8
 transform = "m79"
 
-dir_in = os.path.join(PROJECT_ROOT, "Images", foldername, "Test2")  # Image dir path
+dir_in = os.path.join(
+    PROJECT_ROOT, "Images", foldername, "Test2", "bmp_test", "staticpics"
+)  # Image dir path
 dir_bin = os.path.join(PROJECT_ROOT, "bins")  # bin dir path
 dir_rec = os.path.join(PROJECT_ROOT, "rec")  # rec dir path
 
