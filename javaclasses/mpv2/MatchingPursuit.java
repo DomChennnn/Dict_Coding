@@ -45,18 +45,6 @@ public class MatchingPursuit {
     return normalized;
   }
 
-  public boolean getNormalized() {
-    return normalized;
-  }
-
-  public void setNormalized() {
-    normalized = true;
-  }
-
-  public void clearNormalized() {
-    normalized = false;
-  }
-
   private double tableInnerProduct(int i, int j) {
     if (normalized && i == j) {return 1.0D;}
     if (i < 0 || j < 0 || i >= K || j >= K) {return 0.0D;}
@@ -88,8 +76,8 @@ public class MatchingPursuit {
     }
   }
 
-  public double[] vsSelectBest(double ad[]) {
-    double ad1[] = new double[K];
+  public double[] vsSelectBest(double[] ad) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       throw new IllegalArgumentException((new StringBuilder()).append(
           "vsSelectBest: Input argument vector x is not expected length, N=").append(N).toString());
@@ -99,8 +87,8 @@ public class MatchingPursuit {
     }
   }
 
-  private void vsSelectBest(double ad[], double ad1[]) {
-    double ad2[] = new double[K];
+  private void vsSelectBest(double[] ad, double[] ad1) {
+    double[] ad2 = new double[K];
     dict.transposeTimes(ad, ad2);
     if (!normalized) {
       for (int i = 0; i < K; i++) {ad2[i] = ad2[i] / Math.sqrt(tableInnerProduct(i, i));}
@@ -120,8 +108,8 @@ public class MatchingPursuit {
     }
   }
 
-  public double[] vsBMP(double ad[], int i) {
-    double ad1[] = new double[K];
+  public double[] vsBMP(double[] ad, int i) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       throw new IllegalArgumentException(
           (new StringBuilder()).append(
@@ -133,7 +121,7 @@ public class MatchingPursuit {
     return ad1;
   }
 
-  void vsBMP(double ad[], double ad1[], int i) {
+  void vsBMP(double[] ad, double[] ad1, int i) {
     if (i == 1) {vsSelectBest(ad, ad1);} else if (i > 1 && i <= 100) {
       vsBMP(ad, ad1, i, i + 1 + i / 3, 9.9999999999999995E-007D, 0);
     } else {
@@ -141,10 +129,10 @@ public class MatchingPursuit {
     }
   }
 
-  private void vsBMP(double ad[], double ad1[], int i, int j, double d1, int k) {
+  private void vsBMP(double[] ad, double[] ad1, int i, int j, double d1, int k) {
     double d2 = d1 * d1;
-    double ad2[] = new double[K];
-    double ad3[] = new double[N];
+    double[] ad2 = new double[K];
+    double[] ad3 = new double[N];
     double d3 = 0.0D;
     for (int l = 0; l < N; l++) {
       ad3[l] = ad[l];
@@ -219,36 +207,35 @@ public class MatchingPursuit {
     } catch (NullPointerException nullpointerexception) {
       System.out.println(
           (new StringBuilder()).append("vsBMP: NullPointerException s=").append(j1).append(", km=")
-              .append(k1).append(", count=").append(l1).toString());
+              .append(k1).append(", count=").append(l1));
       nullpointerexception.printStackTrace();
     }
   }
 
-  public double[] vsOMP(double ad[], int i) {
-    double ad1[] = new double[K];
+  public double[] vsOMP(double[] ad, int i) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsOMP: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (i == 1) {vsSelectBest(ad, ad1);}
     if (i > 100) {
       System.out.println(
           (new StringBuilder()).append("vsOMP: Input argument S=").append(i)
-              .append(" is to large.")
-              .toString());
+              .append(" is to large."));
     }
     if (i > 1 && i <= 100) {vsOMPorORMP(ad, ad1, i, 1.0000000000000001E-005D, true);}
     return ad1;
   }
 
-  public double[] vsOMP(double ad[], double d1) {
-    double ad1[] = new double[K];
+  public double[] vsOMP(double[] ad, double d1) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsOMP: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
@@ -256,49 +243,49 @@ public class MatchingPursuit {
     return ad1;
   }
 
-  public double[] vsOMP(double ad[], int i, double d1) {
-    double ad1[] = new double[K];
+  public double[] vsOMP(double[] ad, int i, double d1) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsOMP: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
     if (i == 1) {vsSelectBest(ad, ad1);}
     if (i > 100) {
       System.out.println((new StringBuilder()).append("Input argument S=").append(i)
-          .append(" is to large, S is set to ").append(Math.min(100, N)).toString());
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
       i = Math.min(100, N);
     }
     if (i > 1) {vsOMPorORMP(ad, ad1, i, d1, true);}
     return ad1;
   }
 
-  public double[] vsORMP(double ad[], int i) {
-    double ad1[] = new double[K];
+  public double[] vsORMP(double[] ad, int i) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsORMP: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (i == 1) {vsSelectBest(ad, ad1);}
     if (i > 100) {
       System.out.println((new StringBuilder()).append("Input argument S=").append(i)
-          .append(" is to large, S is set to ").append(Math.min(100, N)).toString());
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
       i = Math.min(100, N);
     }
     if (i > 1 && i <= 100) {vsOMPorORMP(ad, ad1, i, 1.0000000000000001E-005D, false);}
     return ad1;
   }
 
-  public double[] vsORMP(double ad[], double d1) {
-    double ad1[] = new double[K];
+  public double[] vsORMP(double[] ad, double d1) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsORMP: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
@@ -306,30 +293,30 @@ public class MatchingPursuit {
     return ad1;
   }
 
-  public double[] vsORMP(double ad[], int i, double d1) {
-    double ad1[] = new double[K];
+  public double[] vsORMP(double[] ad, int i, double d1) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsORMP: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
     if (i == 1) {vsSelectBest(ad, ad1);}
     if (i > 100) {
       System.out.println((new StringBuilder()).append("Input argument S=").append(i)
-          .append(" is to large, S is set to ").append(Math.min(100, N)).toString());
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
       i = Math.min(100, N);
     }
     if (i > 1) {vsOMPorORMP(ad, ad1, i, d1, false);}
     return ad1;
   }
 
-  void vsOMPorORMP(double ad[], double ad1[], int i, double d1, boolean flag) {
+  void vsOMPorORMP(double[] ad, double[] ad1, int i, double d1, boolean flag) {
     int j = vsOMPorORMP2(ad, ad1, i, d1, flag);
   }
 
-  int vsOMPorORMP2(double ad[], double ad1[], int i, double d1, boolean flag) {
+  int vsOMPorORMP2(double[] ad, double[] ad1, int i, double d1, boolean flag) {
     for (int j = 0; j < K; j++) {ad1[j] = 0.0D;}
 
     double d2 = 0.0D;
@@ -398,11 +385,11 @@ public class MatchingPursuit {
         System.out.println(
             (new StringBuilder()).append("vsOMPorORMP: Values not as expected, here n2x=")
                 .append(d2).append(", s=").append(j1).append(", normalized = ").append(normalized)
-                .append(", do vsBMP instead.").toString());
+                .append(", do vsBMP instead."));
         normalized = checkNormalized();
         System.out.println(
             (new StringBuilder()).append("and checkNormalized returned ").append(normalized)
-                .append(".").toString());
+                .append("."));
         vsBMP(ad, ad1, i, 2 * i, d1, 2);
         return -1;
       }
@@ -412,7 +399,7 @@ public class MatchingPursuit {
     return 0;
   }
 
-  private void backSubstitution(double ad[], int i) {
+  private void backSubstitution(double[] ad, int i) {
     for (int j = 0; j < K; j++) {ad[j] = 0.0D;}
 
     for (int k = i; k >= 0; k--) {
@@ -424,26 +411,26 @@ public class MatchingPursuit {
     }
   }
 
-  public double[] vsPS(double ad[], int i, double d1, int j) {
-    double ad1[] = new double[K];
+  public double[] vsPS(double[] ad, int i, double d1, int j) {
+    double[] ad1 = new double[K];
     if (ad.length != N) {
       System.out.println(
           (new StringBuilder()).append("vsPS: Input argument vector x is not expected length N=")
-              .append(N).toString());
+              .append(N));
       return ad1;
     }
     if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
     if (i == 1) {vsSelectBest(ad, ad1);}
     if (i > 100) {
       System.out.println((new StringBuilder()).append("Input argument S=").append(i)
-          .append(" is to large, S is set to ").append(Math.min(100, N)).toString());
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
       i = Math.min(100, N);
     }
     if (i > 1) {vsPS(ad, ad1, i, d1, j);}
     return ad1;
   }
 
-  void vsPS(double ad[], double ad1[], int i, double d1, int j) {
+  void vsPS(double[] ad, double[] ad1, int i, double d1, int j) {
     initEkstraVariabler(i, true);
     double d2 = 0.0D;
     for (int k = 0; k < N; k++) {d2 += ad[k] * ad[k];}
@@ -473,8 +460,7 @@ public class MatchingPursuit {
     do {
       if (++k1 < 0 || k1 >= i) {
         System.out.println(
-            (new StringBuilder()).append("vsPS: s=").append(k1).append(", beginning MAIN LOOP.")
-                .toString());
+            (new StringBuilder()).append("vsPS: s=").append(k1).append(", beginning MAIN LOOP."));
       }
       if (flag) {
         for (int j2 = 0; j2 < K; j2++) {d[j2] = T[j2] < 0 ? 0.0D : Math.abs(c[j2]);}
@@ -568,27 +554,14 @@ public class MatchingPursuit {
     }
   }
 
-  private static int findMin(double ad[]) {
-    int i = 0;
-    double d1 = 1.7976931348623157E+308D;
-    for (int j = 0; j < ad.length; j++) {
-      if (ad[j] > 0.0D && ad[j] < d1) {
-        i = j;
-        d1 = ad[j];
-      }
-    }
-
-    return i;
-  }
-
-  private static int findMax(double ad[]) {
+  private static int findMax(double[] ad) {
     int i = 0;
     for (int j = 1; j < ad.length; j++) {if (ad[j] > ad[i]) {i = j;}}
 
     return i;
   }
 
-  private int distributeFunction(int i, int j, int k, int ai[]) {
+  private int distributeFunction(int i, int j, int k, int[] ai) {
     double d1 = 0.65000000000000002D;
     if (k > K) {d1 = 0.5D;}
     if (k > i * K) {d1 = 0.40000000000000002D;}
@@ -606,7 +579,7 @@ public class MatchingPursuit {
     if (d[j2] <= 0.0D) {
       System.out.println(
           (new StringBuilder()).append("Error: distributeFunction  km=").append(j2)
-              .append(", d[km]=").append(d[j2]).toString());
+              .append(", d[km]=").append(d[j2]));
     }
     if (l <= 1) {ai[l1 + j2] = 1;} else if (j + 2 == i) {
       ai[l1 + j2] = 1;
@@ -677,12 +650,12 @@ public class MatchingPursuit {
           System.out.println(
               (new StringBuilder()).append("Warning: sumMm = ").append(l2).append(" != ")
                   .append(l)
-                  .append(" = nCombLeft").toString());
+                  .append(" = nCombLeft"));
         }
       } else {
         System.out.println(
             (new StringBuilder()).append("Warning: sum of d array not as expected, sumD = ")
-                .append(d2).toString());
+                .append(d2));
         ai[l1 + j2] = 1;
       }
     }
@@ -690,21 +663,21 @@ public class MatchingPursuit {
   }
 
   private static final int MAXS = 100;
-  private int N;
-  private int K;
-  private AllMatrices dict;
-  private SymmetricMatrix ipMat;
+  private final int N;
+  private final int K;
+  private final AllMatrices dict;
+  private final SymmetricMatrix ipMat;
   private boolean normalized;
   private int maxS1;
   private int maxS2;
-  private double r[][];
-  private int T[];
-  private int J[];
-  private double d[];
-  private double e[];
-  private double u[];
-  private double c[];
-  private double ceu[];
-  private int mm[];
-  private double nx[];
+  private double[][] r;
+  private int[] T;
+  private int[] J;
+  private double[] d;
+  private double[] e;
+  private double[] u;
+  private double[] c;
+  private double[] ceu;
+  private int[] mm;
+  private double[] nx;
 }

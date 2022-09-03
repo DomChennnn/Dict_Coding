@@ -35,7 +35,7 @@ public class SymmetricMatrix extends AllMatrices
    *
    * @serial internal array storage.
    */
-  private double[] Aarray;
+  private final double[] Aarray;
 
 /* ------------------------
    Constructors

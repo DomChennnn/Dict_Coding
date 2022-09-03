@@ -36,7 +36,7 @@ public class SimpleMatrix extends AllMatrices
    *
    * @serial internal array storage.
    */
-  private double[] Aarray;
+  private final double[] Aarray;
 
 /* ------------------------
    Constructors
@@ -101,7 +101,7 @@ public class SimpleMatrix extends AllMatrices
    * @throws IllegalArgumentException Array length must be a multiple of m.
    */
 
-  public SimpleMatrix(double vals[], int n) {
+  public SimpleMatrix(double[] vals, int n) {
     N = n;
     K = (n != 0 ? vals.length / n : 0);
     if (N * K != vals.length) {
@@ -272,17 +272,6 @@ public class SimpleMatrix extends AllMatrices
           ("Array length must as total size of matrix (N*K).");
     }
     for (int i = 0; i < (N * K); i++) {Aarray[i] = vals[i];}
-  }
-
-  /**
-   * Sum of all elements in matrix
-   *
-   * @return sum of all elements
-   */
-  public double sumAll() {
-    double f = 0;
-    for (int i = 0; i < (N * K); i++) {f += Aarray[i];}
-    return f;
   }
 }
 
