@@ -1,30 +1,6 @@
-/*
- * class:  SimpleMatrix
- *
- * Description:		This is a simple implementation of AllMatrices
- *
- * HISTORY:  dd.mm.yyyy
- * Ver. 1.0  10.11.2008  KS: class made
- *
- * */
-
 package mpv2;
 
-/**
- * This is a simple matrix class made by implementing AllMatrices as simple as possible. Only som
- * constructors, and get and set are added here.
- * <p>
- * Also added some more methods, getColum, setColumn, addColum, getRow and setRow. But this
- * implementation is still simple.
- * <p>
- *
- * @author Karl Skretting, University of Stavanger (UiS), (karl.skretting@uis.no)
- * @version November 2008
- */
-
-public class SimpleMatrix extends AllMatrices
-    implements Cloneable, java.io.Serializable {
-
+public class SimpleMatrix extends AllMatrices {
 /* ------------------------
    Class variables
  * ------------------------ */
@@ -133,13 +109,6 @@ public class SimpleMatrix extends AllMatrices
  /* ------------------------
    Public Methods, which use this object (A)
  * ------------------------ */
-
-  /**
-   * Clone the Matrix object.
-   */
-  public Object clone() {
-    return new SimpleMatrix(this);
-  }
 
   /**
    * Get a single element.

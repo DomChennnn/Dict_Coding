@@ -1,35 +1,10 @@
-/*
- * class:  SymmetricMatrix
- *
- * Description:		This is symmetric matrix implementation of AllMatrices
- *
- * HISTORY:  dd.mm.yyyy
- * Ver. 1.0  27.11.2008  KS: class made
- * Ver. 2.0  10.02.2011  KS: Store only N*(N+1)/2 elements for a NxN matrix
- *
- * */
-
 package mpv2;
 
-// import mpv2.util.*;
-
-/**
- * This is a symmetric matrix class made by implementing AllMatrices. Entries are stored columnwise
- * in a one-dimensional array, for each column only elements on or below the main diagonal are
- * stored.
- * <p>
- *
- * @author Karl Skretting, University of Stavanger (UiS), (karl.skretting@uis.no)
- * @version February 2011
- */
-
-public class SymmetricMatrix extends AllMatrices
-    implements Cloneable, java.io.Serializable {
+public class SymmetricMatrix extends AllMatrices {
 
 /* ------------------------
    Class variables
  * ------------------------ */
-
   /**
    * Array for internal storage of elements, column-stacked array.
    *
@@ -130,13 +105,6 @@ public class SymmetricMatrix extends AllMatrices
         Aarray[j] = col[n];
       }
     }
-  }
-
-  /**
-   * Clone the Matrix object.
-   */
-  public Object clone() {
-    return new SymmetricMatrix(this);
   }
 
   /**

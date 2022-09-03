@@ -1,8 +1,3 @@
-// Decompiled by Jad v1.5.8g. Copyright 2001 Pavel Kouznetsov.
-// Jad home page: http://www.kpdus.com/jad.html
-// Decompiler options: packimports(3) 
-// Source File Name:   MatchingPursuit.java
-
 package mpv2;
 
 public class MatchingPursuit {
@@ -142,8 +137,6 @@ public class MatchingPursuit {
     boolean flag = true;
     int j1 = 0;
     int k1 = 0;
-    double d5 = 0.0D;
-    double d8 = 0.0D;
     int l1 = 0;
     try {
       do {
@@ -659,7 +652,6 @@ public class MatchingPursuit {
     return j2;
   }
 
-  private static final int MAXS = 100;
   private final int N;
   private final int K;
   private final AllMatrices dict;
