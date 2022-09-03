@@ -1,17 +1,17 @@
 package mpv2;          // here almost as in Jama
 
-   /** LU Decomposition.
-   <P>
-   For an m-by-n matrix A with m >= n, the LU decomposition is an m-by-n
-   unit lower triangular matrix L, an n-by-n upper triangular matrix U,
-   and a permutation vector piv of length m so that A(piv,:) = L*U.
-   If m < n, then L is m-by-m and U is m-by-n.
-   <P>
-   The LU decompostion with pivoting always exists, even if the matrix is
-   singular, so the constructor will never fail.  The primary use of the
-   LU decomposition is in the solution of square systems of simultaneous
-   linear equations.  This will fail if isNonsingular() returns false.
-   */
+/**
+ * LU Decomposition.
+ * <p>
+ * For an m-by-n matrix A with m >= n, the LU decomposition is an m-by-n unit lower triangular
+ * matrix L, an n-by-n upper triangular matrix U, and a permutation vector piv of length m so that
+ * A(piv,:) = L*U. If m < n, then L is m-by-m and U is m-by-n.
+ * <p>
+ * The LU decompostion with pivoting always exists, even if the matrix is singular, so the
+ * constructor will never fail.  The primary use of the LU decomposition is in the solution of
+ * square systems of simultaneous linear equations.  This will fail if isNonsingular() returns
+ * false.
+ */
 
 public class LUDecomposition implements java.io.Serializable {
 
@@ -19,100 +19,113 @@ public class LUDecomposition implements java.io.Serializable {
    Class variables
  * ------------------------ */
 
-   /** Array for internal storage of decomposition.
-   @serial internal array storage.
+  /**
+   * Array for internal storage of decomposition.
+   *
+   * @serial internal array storage.
    */
-   private double[][] LU;
+  private final double[][] LU;
 
-   /** Row and column dimensions, and pivot sign.
-   @serial column dimension.
-   @serial row dimension.
-   @serial pivot sign.
+  /**
+   * Row and column dimensions, and pivot sign.
+   *
+   * @serial column dimension.
+   * @serial row dimension.
+   * @serial pivot sign.
    */
-   private int m, n, pivsign; 
+  private final int m;
+  private final int n;
+  private int pivsign;
 
-   /** Internal storage of pivot vector.
-   @serial pivot vector.
+  /**
+   * Internal storage of pivot vector.
+   *
+   * @serial pivot vector.
    */
-   private int[] piv;
+  private final int[] piv;
 
 /* ------------------------
    Constructor
  * ------------------------ */
 
-   /** LU Decomposition
-   Constructor returns a structure to access L, U and piv.
-   @param  A   Rectangular matrix
+  /**
+   * LU Decomposition Constructor returns a structure to access L, U and piv.
+   *
+   * @param A Rectangular matrix
    */
 
-   public LUDecomposition (JamaMatrix A) {
+  public LUDecomposition(JamaMatrix A) {
 
-   // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
+    // Use a "left-looking", dot-product, Crout/Doolittle algorithm.
 
-      LU = A.getArrayCopy();
-      m = A.getRowDimension();
-      n = A.getColumnDimension();
-      piv = new int[m];
+    LU = A.getArrayCopy();
+    m = A.getRowDimension();
+    n = A.getColumnDimension();
+    piv = new int[m];
+    for (int i = 0; i < m; i++) {
+      piv[i] = i;
+    }
+    pivsign = 1;
+    double[] LUrowi;
+    double[] LUcolj = new double[m];
+
+    // Outer loop.
+
+    for (int j = 0; j < n; j++) {
+
+      // Make a copy of the j-th column to localize references.
+
       for (int i = 0; i < m; i++) {
-         piv[i] = i;
+        LUcolj[i] = LU[i][j];
       }
-      pivsign = 1;
-      double[] LUrowi;
-      double[] LUcolj = new double[m];
 
-      // Outer loop.
+      // Apply previous transformations.
 
-      for (int j = 0; j < n; j++) {
+      for (int i = 0; i < m; i++) {
+        LUrowi = LU[i];
 
-         // Make a copy of the j-th column to localize references.
+        // Most of the time is spent in the following dot product.
 
-         for (int i = 0; i < m; i++) {
-            LUcolj[i] = LU[i][j];
-         }
+        int kmax = Math.min(i, j);
+        double s = 0.0;
+        for (int k = 0; k < kmax; k++) {
+          s += LUrowi[k] * LUcolj[k];
+        }
 
-         // Apply previous transformations.
-
-         for (int i = 0; i < m; i++) {
-            LUrowi = LU[i];
-
-            // Most of the time is spent in the following dot product.
-
-            int kmax = Math.min(i,j);
-            double s = 0.0;
-            for (int k = 0; k < kmax; k++) {
-               s += LUrowi[k]*LUcolj[k];
-            }
-
-            LUrowi[j] = LUcolj[i] -= s;
-         }
-   
-         // Find pivot and exchange if necessary.
-
-         int p = j;
-         for (int i = j+1; i < m; i++) {
-            if (Math.abs(LUcolj[i]) > Math.abs(LUcolj[p])) {
-               p = i;
-            }
-         }
-         if (p != j) {
-            for (int k = 0; k < n; k++) {
-               double t = LU[p][k]; LU[p][k] = LU[j][k]; LU[j][k] = t;
-            }
-            int k = piv[p]; piv[p] = piv[j]; piv[j] = k;
-            pivsign = -pivsign;
-         }
-
-         // Compute multipliers.
-         
-         if (j < (m-1)) {      // KS: try something else, index error
-            if (LU[j][j] != 0.0) {
-               for (int i = j+1; i < m; i++) {
-                  LU[i][j] /= LU[j][j];
-               }   
-            }
-         }
+        LUrowi[j] = LUcolj[i] -= s;
       }
-   }
+
+      // Find pivot and exchange if necessary.
+
+      int p = j;
+      for (int i = j + 1; i < m; i++) {
+        if (Math.abs(LUcolj[i]) > Math.abs(LUcolj[p])) {
+          p = i;
+        }
+      }
+      if (p != j) {
+        for (int k = 0; k < n; k++) {
+          double t = LU[p][k];
+          LU[p][k] = LU[j][k];
+          LU[j][k] = t;
+        }
+        int k = piv[p];
+        piv[p] = piv[j];
+        piv[j] = k;
+        pivsign = -pivsign;
+      }
+
+      // Compute multipliers.
+
+      if (j < (m - 1)) {      // KS: try something else, index error
+        if (LU[j][j] != 0.0) {
+          for (int i = j + 1; i < m; i++) {
+            LU[i][j] /= LU[j][j];
+          }
+        }
+      }
+    }
+  }
 
 /* ------------------------
    Temporary, experimental code.
@@ -177,137 +190,150 @@ public class LUDecomposition implements java.io.Serializable {
    Public Methods
  * ------------------------ */
 
-   /** Is the matrix nonsingular?
-   @return     true if U, and hence A, is nonsingular.
+  /**
+   * Is the matrix nonsingular?
+   *
+   * @return true if U, and hence A, is nonsingular.
    */
 
-   public boolean isNonsingular () {
+  public boolean isNonsingular() {
+    for (int j = 0; j < n; j++) {
+      if (LU[j][j] == 0) {return false;}
+    }
+    return true;
+  }
+
+  /**
+   * Return lower triangular factor
+   *
+   * @return L
+   */
+
+  public JamaMatrix getL() {
+    JamaMatrix X = new JamaMatrix(m, n);
+    double[][] L = X.getArray();
+    for (int i = 0; i < m; i++) {
       for (int j = 0; j < n; j++) {
-         if (LU[j][j] == 0)
-            return false;
+        if (i > j) {
+          L[i][j] = LU[i][j];
+        } else if (i == j) {
+          L[i][j] = 1.0;
+        } else {
+          L[i][j] = 0.0;
+        }
       }
-      return true;
-   }
+    }
+    return X;
+  }
 
-   /** Return lower triangular factor
-   @return     L
+  /**
+   * Return upper triangular factor
+   *
+   * @return U
    */
 
-   public JamaMatrix getL () {
-      JamaMatrix X = new JamaMatrix(m,n);
-      double[][] L = X.getArray();
-      for (int i = 0; i < m; i++) {
-         for (int j = 0; j < n; j++) {
-            if (i > j) {
-               L[i][j] = LU[i][j];
-            } else if (i == j) {
-               L[i][j] = 1.0;
-            } else {
-               L[i][j] = 0.0;
-            }
-         }
-      }
-      return X;
-   }
-
-   /** Return upper triangular factor
-   @return     U
-   */
-
-   public JamaMatrix getU () {
-      JamaMatrix X = new JamaMatrix(n,n);
-      double[][] U = X.getArray();
-      for (int i = 0; i < n; i++) {
-         for (int j = 0; j < n; j++) {
-            if (i <= j) {
-               U[i][j] = LU[i][j];
-            } else {
-               U[i][j] = 0.0;
-            }
-         }
-      }
-      return X;
-   }
-
-   /** Return pivot permutation vector
-   @return     piv
-   */
-
-   public int[] getPivot () {
-      int[] p = new int[m];
-      for (int i = 0; i < m; i++) {
-         p[i] = piv[i];
-      }
-      return p;
-   }
-
-   /** Return pivot permutation vector as a one-dimensional double array
-   @return     (double) piv
-   */
-
-   public double[] getDoublePivot () {
-      double[] vals = new double[m];
-      for (int i = 0; i < m; i++) {
-         vals[i] = (double) piv[i];
-      }
-      return vals;
-   }
-
-   /** Determinant
-   @return     det(A)
-   @exception  IllegalArgumentException  Matrix must be square
-   */
-
-   public double det () {
-      if (m != n) {
-         throw new IllegalArgumentException("Matrix must be square.");
-      }
-      double d = (double) pivsign;
+  public JamaMatrix getU() {
+    JamaMatrix X = new JamaMatrix(n, n);
+    double[][] U = X.getArray();
+    for (int i = 0; i < n; i++) {
       for (int j = 0; j < n; j++) {
-         d *= LU[j][j];
+        if (i <= j) {
+          U[i][j] = LU[i][j];
+        } else {
+          U[i][j] = 0.0;
+        }
       }
-      return d;
-   }
+    }
+    return X;
+  }
 
-   /** Solve A*X = B
-   @param  B   A Matrix with as many rows as A and any number of columns.
-   @return     X so that L*U*X = B(piv,:)
-   @exception  IllegalArgumentException Matrix row dimensions must agree.
-   @exception  RuntimeException  Matrix is singular.
+  /**
+   * Return pivot permutation vector
+   *
+   * @return piv
    */
 
-   public JamaMatrix solve (JamaMatrix B) {
-      if (B.getRowDimension() != m) {
-         throw new IllegalArgumentException("Matrix row dimensions must agree.");
-      }
-      if (!this.isNonsingular()) {
-         throw new RuntimeException("Matrix is singular.");
-      }
+  public int[] getPivot() {
+    int[] p = new int[m];
+    for (int i = 0; i < m; i++) {
+      p[i] = piv[i];
+    }
+    return p;
+  }
 
-      // Copy right hand side with pivoting
-      int nx = B.getColumnDimension();
-      JamaMatrix Xmat = B.getMatrix(piv,0,nx-1);
-      double[][] X = Xmat.getArray();
+  /**
+   * Return pivot permutation vector as a one-dimensional double array
+   *
+   * @return (double) piv
+   */
 
-      // Solve L*Y = B(piv,:)
-      for (int k = 0; k < n; k++) {
-         for (int i = k+1; i < n; i++) {
-            for (int j = 0; j < nx; j++) {
-               X[i][j] -= X[k][j]*LU[i][k];
-            }
-         }
+  public double[] getDoublePivot() {
+    double[] vals = new double[m];
+    for (int i = 0; i < m; i++) {
+      vals[i] = piv[i];
+    }
+    return vals;
+  }
+
+  /**
+   * Determinant
+   *
+   * @return det(A)
+   * @throws IllegalArgumentException Matrix must be square
+   */
+
+  public double det() {
+    if (m != n) {
+      throw new IllegalArgumentException("Matrix must be square.");
+    }
+    double d = pivsign;
+    for (int j = 0; j < n; j++) {
+      d *= LU[j][j];
+    }
+    return d;
+  }
+
+  /**
+   * Solve A*X = B
+   *
+   * @param B A Matrix with as many rows as A and any number of columns.
+   * @return X so that L*U*X = B(piv,:)
+   * @throws IllegalArgumentException Matrix row dimensions must agree.
+   * @throws RuntimeException         Matrix is singular.
+   */
+
+  public JamaMatrix solve(JamaMatrix B) {
+    if (B.getRowDimension() != m) {
+      throw new IllegalArgumentException("Matrix row dimensions must agree.");
+    }
+    if (!this.isNonsingular()) {
+      throw new RuntimeException("Matrix is singular.");
+    }
+
+    // Copy right hand side with pivoting
+    int nx = B.getColumnDimension();
+    JamaMatrix Xmat = B.getMatrix(piv, 0, nx - 1);
+    double[][] X = Xmat.getArray();
+
+    // Solve L*Y = B(piv,:)
+    for (int k = 0; k < n; k++) {
+      for (int i = k + 1; i < n; i++) {
+        for (int j = 0; j < nx; j++) {
+          X[i][j] -= X[k][j] * LU[i][k];
+        }
       }
-      // Solve U*X = Y;
-      for (int k = n-1; k >= 0; k--) {
-         for (int j = 0; j < nx; j++) {
-            X[k][j] /= LU[k][k];
-         }
-         for (int i = 0; i < k; i++) {
-            for (int j = 0; j < nx; j++) {
-               X[i][j] -= X[k][j]*LU[i][k];
-            }
-         }
+    }
+    // Solve U*X = Y;
+    for (int k = n - 1; k >= 0; k--) {
+      for (int j = 0; j < nx; j++) {
+        X[k][j] /= LU[k][k];
       }
-      return Xmat;
-   }
+      for (int i = 0; i < k; i++) {
+        for (int j = 0; j < nx; j++) {
+          X[i][j] -= X[k][j] * LU[i][k];
+        }
+      }
+    }
+    return Xmat;
+  }
 }
