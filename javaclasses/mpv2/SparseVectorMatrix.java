@@ -122,7 +122,7 @@ implements Cloneable, java.io.Serializable {
      * @param k column number for the returned entry value.
      * */
     public double get(int n, int k){
-        // rekkefølge for disse testene er viktig (egentlig en if else struktur)
+        // rekkeflge for disse testene er viktig (egentlig en if else struktur)
         if ((k<0) || (k>=K) || (n<0) || (n>=N)) return 0.0;
         return col[k].get(n);
     }
@@ -138,7 +138,7 @@ implements Cloneable, java.io.Serializable {
      * @param val the value to be put into the given entry of the dictionary.
      * */
     public void set(int n, int k, double val){
-        // rekkefølge for disse testene er viktig (egentlig en if else struktur)
+        // rekkeflge for disse testene er viktig (egentlig en if else struktur)
         if ((k<0) || (k>=K) || (n<0) || (n>=N)) return;
         col[k].set(n, val);
     }

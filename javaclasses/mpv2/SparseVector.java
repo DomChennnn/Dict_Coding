@@ -37,7 +37,7 @@ import java.io.PrintWriter;
  * */
 public class SparseVector implements Cloneable, java.io.Serializable {
     
-    private int N;                // lengde på vektor, inkludert nullere
+    private int N;                // lengde p vektor, inkludert nullere
     private int nonZeroCount;     // antall ikke-null elementer    
     private int[] index;          // stigende og lengde nonZeroCount
     private double[] value;       // length is nonZeroCount
@@ -68,7 +68,7 @@ public class SparseVector implements Cloneable, java.io.Serializable {
         // make the arrays
         index = new int[nonZeroCount];
         value = new double[nonZeroCount];
-        int i = 0;    // indeks for nonZeroValue (og tilhørende)
+        int i = 0;    // indeks for nonZeroValue (og tilhrende)
         for (int n = 0; n < N; n++) {
             if (v[n] != 0.0){
                 index[i] = n;

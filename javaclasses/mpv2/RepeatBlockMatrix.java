@@ -145,7 +145,7 @@ implements Cloneable, java.io.Serializable {
         }
     }
     
-    // må justere en del metoder for å takle L==0 tilfellet
+    // m justere en del metoder for  takle L==0 tilfellet
     // kan de da kalle super.metode(..) for metode i AllMatrices ??
     
 }

@@ -183,7 +183,7 @@ public class DiagonalMatrix extends AllMatrices
         for (int n = 0; n < N; n++) diag[n] = vals[n];
     }
 
-    // de fleste metoder kan gjøres betydelig enklere når en har ei diagonal matrise
+    // de fleste metoder kan gjres betydelig enklere nr en har ei diagonal matrise
     
     /** Frobenius norm
    @return    sqrt of sum of squares of all elements.

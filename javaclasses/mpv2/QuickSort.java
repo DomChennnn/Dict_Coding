@@ -12,7 +12,7 @@
  *  that make many textbook implementations, even randomized ones,
  *  go quadratic (e.g., all keys are the same).
  *
- * Copyright © 2006, Robert Sedgewick and Kevin Wayne.
+ * Copyright  2006, Robert Sedgewick and Kevin Wayne.
  * Last updated: Fri Mar 2 06:52:24 EST 2007
  *
  * 30 October 2007, Copied from

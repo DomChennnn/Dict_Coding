@@ -103,7 +103,7 @@ implements Cloneable, java.io.Serializable {
         fn = new int[K];
         fv = new double[K][];
         for (int k=0; k<K; k++){
-            int i1=0;      // første element for vektoren i val
+            int i1=0;      // frste element for vektoren i val
             int i2=N-1;    // og siste
             while ((A[i1][k]==0.0) && (i1<i2)) i1++;
             while ((A[i2][k]==0.0) && (i1<i2)) i2--;
@@ -147,7 +147,7 @@ implements Cloneable, java.io.Serializable {
      * @param k column number for the returned entry value.
      * */
     public double get(int n, int k){
-        // rekkefølge for disse testene er viktig (egentlig en if else struktur)
+        // rekkeflge for disse testene er viktig (egentlig en if else struktur)
         if ((k<0) || (k>=K) || (n<0) || (n>=N)) return 0.0;
         if ((n<getSupportStart(k)) || (n>=getSupportEnd(k))) return 0.0;
         return fv[k][n-fn[k]];
@@ -164,7 +164,7 @@ implements Cloneable, java.io.Serializable {
      * @param val the value to be put into the given entry of the dictionary.
      * */
     public void set(int n, int k, double val){
-        // rekkefølge for disse testene er viktig (egentlig en if else struktur)
+        // rekkeflge for disse testene er viktig (egentlig en if else struktur)
         if ((k<0) || (k>=K) || (n<0) || (n>=N)) return;
         if ((n<getSupportStart(k)) || (n>=getSupportEnd(k))) {
             // extend support range
@@ -209,7 +209,7 @@ implements Cloneable, java.io.Serializable {
      * */
     public void setColumn(int k, double[] col){
         if ((k<0) || (k>=K) || (col.length != N)) return;
-        int i1 = 0;       // første element
+        int i1 = 0;       // frste element
         int i2 = N-1;     // og siste
         while ((col[i1]==0.0) && (i1<i2)) i1++;
         while ((col[i2]==0.0) && (i1<i2)) i2--;
@@ -249,7 +249,7 @@ implements Cloneable, java.io.Serializable {
                 ("Array length must be as total size of matrix (N*K).");
         }
         for (int k=0; k<K; k++){
-            int i1=k*N;       // første element for vektoren i val
+            int i1=k*N;       // frste element for vektoren i val
             int i2=i1+N-1;    // og siste
             while ((vals[i1]==0.0) && (i1<i2)) i1++;
             while ((vals[i2]==0.0) && (i1<i2)) i2--;
@@ -272,9 +272,9 @@ implements Cloneable, java.io.Serializable {
             int tmp = k1;
             k1 = k2;
             k2 = tmp;
-        } // skal nå ha  k2 <= k1
+        } // skal n ha  k2 <= k1
         if ((k2<0) || (k1>=K)) return 0.0;
-        // vi skal nå ha: 0 <= k2 <= k1 < K
+        // vi skal n ha: 0 <= k2 <= k1 < K
         // calculate inner product
         double ip = 0.0;
         for (int n = Math.max(fn[k1], fn[k2]);

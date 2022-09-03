@@ -4,7 +4,7 @@
  * Description:		This abstract class is the superclass for matrices
  *                  and dictionaries in this package.
  *
- * Kommentarer for brukerne (javadoc) skal være på engelsk, mens
+ * Kommentarer for brukerne (javadoc) skal vre p engelsk, mens
  * det som er for eget bruk gjerne er norsk, og kommentert som dette,
  * (med stjerne i starten av hver linje, eller // i slutten)
  *
@@ -184,12 +184,12 @@ import java.io.PrintWriter;
  */
 
 //  ?????
-//  TODO: en burde nok unngått bruk av spesielle klasser her (JamaMatrix) og heller
-//  satset på void metoder som setter resultatet i en AllMatrices object
+//  TODO: en burde nok unngtt bruk av spesielle klasser her (JamaMatrix) og heller
+//  satset p void metoder som setter resultatet i en AllMatrices object
 //  Et eksempel er laget for metoden plus.
 //  Kanskje heller resultat til A (this), A = B + C, A = A + B, o.s.v
-/*  Det er da følgende metoder som kan være aktuelle, alle er av type void!
- *  A er dette AllMatrices objektet (this) og det får nye verdier i operasjonen (NxK)
+/*  Det er da flgende metoder som kan vre aktuelle, alle er av type void!
+ *  A er dette AllMatrices objektet (this) og det fr nye verdier i operasjonen (NxK)
  *  B og C er andre AllMatrices objekt og gis som argument til metoden, disse endres
  *  ikke (uten hvis et av de er this). s er en skalar.
  *  Elementvise metoder:

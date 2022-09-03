@@ -50,7 +50,7 @@ import java.util.Random;
 public class SparseMatrix extends AllMatrices
 implements Cloneable, java.io.Serializable {
     
-    // for å lagre data brukes her flere array, de er alltid like lange!
+    // for  lagre data brukes her flere array, de er alltid like lange!
     // de neste fem indekseres med i
     private int[] nonZeroRow;        // i D(n,k) er dette n (row), -1 for ledig
     private int[] nonZeroColumn;     // i D(n,k) er dette k (column), -1 for ledig
@@ -58,14 +58,14 @@ implements Cloneable, java.io.Serializable {
     private int[] nextInSameRow;     // peker til neste i samme rad
     private int[] nextInSameColumn;  // peker til neste i samme kolonne
     
-    private int iNextFree;           // peker til første ubrukte / ledige
-    private int[] firstInRow;        // peker til første i hver rad (eller neste ledige)
-    private int[] firstInColumn;     // peker til første i hver kolonne
+    private int iNextFree;           // peker til frste ubrukte / ledige
+    private int[] firstInRow;        // peker til frste i hver rad (eller neste ledige)
+    private int[] firstInColumn;     // peker til frste i hver kolonne
     
-    private int nonZeroCount;        // går gjennom alle med: for (int i=0; i<nonZeroCount; i++)
+    private int nonZeroCount;        // gr gjennom alle med: for (int i=0; i<nonZeroCount; i++)
     private int capacity;            // == nonZeroValue.length
     // antall ledige er capacity-nonZeroCount
-    private int increment = 100;     // det en øker med når array utvides
+    private int increment = 100;     // det en ker med nr array utvides
     
 /* ------------------------
    Constructors
@@ -106,7 +106,7 @@ implements Cloneable, java.io.Serializable {
                 if (A[n][k] != 0.0) nonZeroCount++;
             }
         }
-        incrementCapacity(nonZeroCount);    // endrer også iNextFree og capacity
+        incrementCapacity(nonZeroCount);    // endrer ogs iNextFree og capacity
         firstInRow = new int[N];
         for (int n=0; n<N; n++) firstInRow[n] = -1;
         firstInColumn = new int[K];
@@ -114,7 +114,7 @@ implements Cloneable, java.io.Serializable {
         //
         int[] lastInRow = new int[N];
         for (int n=0; n<N; n++) lastInRow[n] = -1;
-        int i = 0;    // indeks for nonZeroValue (og tilhørende)
+        int i = 0;    // indeks for nonZeroValue (og tilhrende)
         for (int k=0; k<K; k++){
             for (int n=0; n<N; n++){
                 if (A[n][k] != 0.0) {
@@ -140,8 +140,8 @@ implements Cloneable, java.io.Serializable {
                 }
             }
         }
-        // noen unødvendige (?) sjekk
-        if (i != nonZeroCount) {   // nå skal en ha fått med alle
+        // noen undvendige (?) sjekk
+        if (i != nonZeroCount) {   // n skal en ha ftt med alle
             System.out.println("SparseMatrix constructor has logical error: " +
             " i = " + i + ", while nonZeroCount = " + nonZeroCount );
         }
@@ -150,7 +150,7 @@ implements Cloneable, java.io.Serializable {
             " capacity = " + capacity + ", while nonZeroCount = " + nonZeroCount );
         }
         //
-        iNextFree = -1;     // det er nå ikke noen indeks til neste ledige
+        iNextFree = -1;     // det er n ikke noen indeks til neste ledige
         // System.out.println("SparseMatrix, " + N + "-by-" + K +
         // ", created with supplied values.");
     }
@@ -174,7 +174,7 @@ implements Cloneable, java.io.Serializable {
         capacity = 0;           // starter med null-pekere
         iNextFree = -1;         // og det er ikke noen ledige
         setAll(vals);
-        iNextFree = -1;     // det er nå ikke noen indeks til neste ledige
+        iNextFree = -1;     // det er n ikke noen indeks til neste ledige
     }
     
     /** Construct a new matrix from another matrix (of any kind)
@@ -183,7 +183,7 @@ implements Cloneable, java.io.Serializable {
     public SparseMatrix(AllMatrices B) {
         N = B.getN();
         K = B.getK();
-        //   Bør kanskje heller gå om pakka kolonne!
+        //   Br kanskje heller g om pakka kolonne!
         capacity = 0;           // starter med null-pekere
         iNextFree = -1;         // og det er ikke noen ledige
         nonZeroCount = 0;
@@ -193,7 +193,7 @@ implements Cloneable, java.io.Serializable {
             }
         }
         //
-        incrementCapacity(nonZeroCount);    // endrer også iNextFree og capacity
+        incrementCapacity(nonZeroCount);    // endrer ogs iNextFree og capacity
         firstInRow = new int[N];
         for (int n=0; n<N; n++) firstInRow[n] = -1;
         firstInColumn = new int[K];
@@ -201,7 +201,7 @@ implements Cloneable, java.io.Serializable {
         //
         int[] lastInRow = new int[N];
         for (int n=0; n<N; n++) lastInRow[n] = -1;
-        int i = 0;    // indeks for nonZeroValue (og tilhørende)
+        int i = 0;    // indeks for nonZeroValue (og tilhrende)
         for (int k=0; k<K; k++){
             for (int n=0; n<N; n++){
                 if (B.get(n,k) != 0.0) {
@@ -227,7 +227,7 @@ implements Cloneable, java.io.Serializable {
                 }
             }
         }
-        iNextFree = -1;     // det er nå ikke noen indeks til neste ledige
+        iNextFree = -1;     // det er n ikke noen indeks til neste ledige
     }
     
  /* ------------------------
@@ -240,7 +240,7 @@ implements Cloneable, java.io.Serializable {
         int[] tempi;
         double[] tempd;
         int newCapacity = capacity + incCapacity;
-        // System.out.println("incrementCapacity: Øker med " +
+        // System.out.println("incrementCapacity: ker med " +
         //         + incCapacity + " fra " + capacity + " til " + newCapacity );
         //
         tempi = nonZeroRow;
@@ -267,12 +267,12 @@ implements Cloneable, java.io.Serializable {
         //     ", nextInSameRow.length = " + nextInSameRow.length );
         nextInSameRow[newCapacity-1] = -1;  // feil her?
         //
-        if (iNextFree < 0) {        // det var ingen ledige før utvidelsen
-            iNextFree = capacity;   // første av de nye er nå neste ledig
+        if (iNextFree < 0) {        // det var ingen ledige fr utvidelsen
+            iNextFree = capacity;   // frste av de nye er n neste ledig
         } else {
-            int iLastFree = iNextFree;      // skal finne siste ledige før utvidelsen
+            int iLastFree = iNextFree;      // skal finne siste ledige fr utvidelsen
             while (nextInSameRow[iLastFree] >= 0) iLastFree = nextInSameRow[iLastFree];
-            // kobler siste ledige før utvidelse til de nye ledige
+            // kobler siste ledige fr utvidelse til de nye ledige
             nextInSameRow[iLastFree] = capacity;
             // mens iNextFree er uforandret
         }
@@ -288,11 +288,11 @@ implements Cloneable, java.io.Serializable {
     private int nk2i(int n, int k){
         if ((k<0) || (k>=K) || (n<0) || (n>=N)) return -1;
         int i = -1;
-        if (N < K) {    // søker nedetter kolonne k
+        if (N < K) {    // sker nedetter kolonne k
             i = firstInColumn[k];
             if (i < 0) return -1;
             while ((nonZeroRow[i] < n) && (nextInSameColumn[i] >= 0)) i = nextInSameColumn[i];
-        } else {   // søker langs linje n
+        } else {   // sker langs linje n
             i = firstInRow[n];
             if (i < 0) return -1;
             while ((nonZeroColumn[i] < k) && (nextInSameRow[i] >= 0)) i = nextInSameRow[i];
@@ -346,10 +346,10 @@ implements Cloneable, java.io.Serializable {
     public void set(int n, int k, double val){
         if ((k<0) || (k>=K) || (n<0) || (n>=N)) return;
         int i = nk2i(n, k);
-        if (i >= 0){                    // fanns fra før
+        if (i >= 0){                    // fanns fra fr
             nonZeroValue[i] = val;
             if (val == 0.0) {
-                // pekere skal hoppe over dette elementet (i), først for linje
+                // pekere skal hoppe over dette elementet (i), frst for linje
                 int a = firstInRow[n];      // a : after, indeks for elementet etter
                 int b = -1;                 // b : before, elementet foran
                 while (a >= 0) {
@@ -359,7 +359,7 @@ implements Cloneable, java.io.Serializable {
                 }
                 if (b < 0) firstInRow[n] = a;
                 else nextInSameRow[b] = a;
-                // og så kolonna
+                // og s kolonna
                 a = firstInColumn[k];       // a : after, elementet etter
                 b = -1;                     // b : before, elementet foran
                 while (a >= 0) {
@@ -373,19 +373,19 @@ implements Cloneable, java.io.Serializable {
                 nonZeroRow[i] = -1;
                 nonZeroColumn[i] = -1;
                 nextInSameRow[i] = iNextFree;       // peker til neste ledig
-                iNextFree = i;                      // denne er nå neste (første) av de ledige
+                iNextFree = i;                      // denne er n neste (frste) av de ledige
                 nextInSameColumn[i] = -1;
                 nonZeroCount--;
             }
-        } else {                        // nytt element må opprettes
-            if (iNextFree < 0) incrementCapacity(increment);   // øker kapasitet
+        } else {                        // nytt element m opprettes
+            if (iNextFree < 0) incrementCapacity(increment);   // ker kapasitet
             i = iNextFree;
             iNextFree = nextInSameRow[i];
             nonZeroRow[i] = n;
             nonZeroColumn[i] = k;
             nonZeroValue[i] = val;
             nonZeroCount++;
-            // og så må pekere korrigeres, tar først linja
+            // og s m pekere korrigeres, tar frst linja
             int a = firstInRow[n];      // a : after, indeks for elementet etter
             int b = -1;                 // b : before, elementet foran
             while (a >= 0) {
@@ -396,7 +396,7 @@ implements Cloneable, java.io.Serializable {
             nextInSameRow[i] = a;       // neste blir den etter
             if (b < 0) firstInRow[n] = i;
             else nextInSameRow[b] = i;
-            // og så kolonna
+            // og s kolonna
             a = firstInColumn[k];       // a : after, elementet etter
             b = -1;                     // b : before, elementet foran
             while (a >= 0) {
@@ -461,7 +461,7 @@ implements Cloneable, java.io.Serializable {
         // set capacity
         capacity = 0;           // starter med null-pekere
         iNextFree = -1;         // og det er ikke noen ledige
-        incrementCapacity(nonZeroCount);    // endrer også iNextFree og capacity
+        incrementCapacity(nonZeroCount);    // endrer ogs iNextFree og capacity
         firstInRow = new int[N];
         for (int n=0; n<N; n++) firstInRow[n] = -1;
         firstInColumn = new int[K];
@@ -469,8 +469,8 @@ implements Cloneable, java.io.Serializable {
         //
         int[] lastInRow = new int[N];
         for (int n=0; n<N; n++) lastInRow[n] = -1;
-        int j = 0;    // indeks som går gjennom alle de N*K elementen i val
-        int i = 0;    // indeks for nonZeroValue (og tilhørende)
+        int j = 0;    // indeks som gr gjennom alle de N*K elementen i val
+        int i = 0;    // indeks for nonZeroValue (og tilhrende)
         for (int k=0; k<K; k++){
             for (int n=0; n<N; n++, j++){
                 if (vals[j] != 0.0) {
@@ -496,15 +496,15 @@ implements Cloneable, java.io.Serializable {
                 }
             }
         }
-        iNextFree = -1;     // det er nå ikke noen indeks til neste ledige
+        iNextFree = -1;     // det er n ikke noen indeks til neste ledige
     }
 
     
-    // noen algoritmer kan være mer effektive enn de som arves
+    // noen algoritmer kan vre mer effektive enn de som arves
     
-    // men innerProduct er ikke så effektiv som forventet, sammenlignet med MPSimpleMatrix
-    // som testet i testmp03.m fra Matlab. Men mye (mesteparten) av tida antas da å
-    // være i forbindelse med kall til Java.
+    // men innerProduct er ikke s effektiv som forventet, sammenlignet med MPSimpleMatrix
+    // som testet i testmp03.m fra Matlab. Men mye (mesteparten) av tida antas da 
+    // vre i forbindelse med kall til Java.
     /**
      * Returns the inner product of two dictionary elements, i.e. matrix column vectors.
      * Legal range is <code>0 <= k1 < K</code> and <code>0 <= k2 < K</code>.
