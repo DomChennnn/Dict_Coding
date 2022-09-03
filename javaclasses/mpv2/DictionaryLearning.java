@@ -1,875 +1,1010 @@
-/*     */ package mpv2;
-/*     */ 
-/*     */ public class DictionaryLearning {
-/*     */   private int N;
-/*     */   
-/*     */   private int K;
-/*     */   
-/*     */   private SimpleMatrix D;
-/*     */   
-/*     */   private SymmetricMatrix DD;
-/*     */   
-/*     */   private SymmetricMatrix C;
-/*     */   
-/*     */   private DiagonalMatrix G;
-/*     */   
-/*  38 */   private char lambdaMet = '1';
-/*     */   
-/*  40 */   private double lambdaLow = 1.0D;
-/*     */   
-/*  41 */   private double lambdaHigh = 1.0D;
-/*     */   
-/*  42 */   private double lambdaPar = 20000.0D;
-/*     */   
-/*     */   public static final int BMP = 1;
-/*     */   
-/*     */   public static final int OMP = 2;
-/*     */   
-/*     */   public static final int ORMP = 3;
-/*     */   
-/*     */   public static final int PS = 4;
-/*     */   
-/*     */   private MatchingPursuit mp;
-/*     */   
-/*  50 */   private int mpMet = 2;
-/*     */   
-/*  51 */   private int mpS = 2;
-/*     */   
-/*  52 */   private double mpRelErr = 1.0E-6D;
-/*     */   
-/*  53 */   private double mpAbsErr = 1.0E-6D;
-/*     */   
-/*  54 */   private int mpComb = 50;
-/*     */   
-/*  56 */   private int paramI1 = 128;
-/*     */   
-/*  57 */   private double minCdiag = 1.0E18D;
-/*     */   
-/*  58 */   private double maxCdiag = 0.0D;
-/*     */   
-/*  59 */   private double valueCmmr = 1000000.0D;
-/*     */   
-/*  60 */   private double limitCmax = 0.0D;
-/*     */   
-/*  61 */   private double limitCmmr = 1000000.0D;
-/*     */   
-/*     */   private int noTV;
-/*     */   
-/*     */   private boolean verbose = false;
-/*     */   
-/*     */   private boolean veryVerbose = false;
-/*     */   
-/*     */   private double[] x;
-/*     */   
-/*     */   private double[] w;
-/*     */   
-/*     */   private double[] r;
-/*     */   
-/*     */   private double[] u;
-/*     */   
-/*     */   private double[] v;
-/*     */   
-/*     */   private boolean loggActive = true;
-/*     */   
-/*  75 */   private double sumxx = 0.0D;
-/*     */   
-/*  76 */   private double sumww = 0.0D;
-/*     */   
-/*  77 */   private double sumrr = 0.0D;
-/*     */   
-/*     */   private double[] sumAllxxTab;
-/*     */   
-/*     */   private double[] sumAllwwTab;
-/*     */   
-/*     */   private double[] sumAllrrTab;
-/*     */   
-/*     */   private double[] snrTab;
-/*     */   
-/*     */   private double[] sumxxTab;
-/*     */   
-/*     */   private double[] sumwwTab;
-/*     */   
-/*     */   private double[] sumrrTab;
-/*     */   
-/*  85 */   private int nzc = 0;
-/*     */   
-/*     */   private int[] indexW;
-/*     */   
-/*     */   private double[] valueW;
-/*     */   
-/*     */   public DictionaryLearning(AllMatrices paramAllMatrices, boolean paramBoolean, int paramInt) {
-/* 112 */     this.N = paramAllMatrices.getN();
-/* 113 */     this.K = paramAllMatrices.getK();
-/* 114 */     this.noTV = this.K;
-/* 115 */     this.D = new SimpleMatrix(paramAllMatrices);
-/* 116 */     this.G = new DiagonalMatrix(this.K, 1.0D);
-/* 117 */     this.C = new SymmetricMatrix(this.K, this.K);
-/* 118 */     this.x = new double[this.N];
-/* 119 */     this.w = new double[this.K];
-/* 120 */     this.r = new double[this.N];
-/* 121 */     this.u = new double[this.K];
-/* 122 */     this.v = new double[this.K];
-/* 123 */     setVerbose(paramInt);
-/* 125 */     for (byte b = 0; b < this.K; b++) {
-/* 126 */       double d = this.D.innerProduct(b, b);
-/* 127 */       if (d > 0.0D) {
-/* 128 */         d = 1.0D / d;
-/* 129 */         if (d > this.maxCdiag)
-/* 129 */           this.maxCdiag = d; 
-/* 130 */         if (d < this.minCdiag)
-/* 130 */           this.minCdiag = d; 
-/* 131 */         this.C.set(b, b, d);
-/* 132 */         this.G.set(b, Math.sqrt(d));
-/*     */       } else {
-/* 134 */         System.out.println("Warning: 2-norm of dictionary vector " + b + " is less or equal to zero.");
-/* 136 */         this.C.set(b, b, 1.0D);
-/* 137 */         this.G.set(b, 1.0D);
-/*     */       } 
-/* 139 */       this.valueCmmr = this.maxCdiag / this.minCdiag;
-/* 140 */       this.limitCmax = 4.0D * this.maxCdiag;
-/*     */     } 
-/* 142 */     this.D.timeseqScaleColumns(this.G);
-/* 144 */     if (paramBoolean) {
-/* 145 */       this.DD = SymmetricMatrix.innerProductMatrix(this.D);
-/* 146 */       this.mp = new MatchingPursuit(this.D, this.DD);
-/* 147 */       if (this.verbose)
-/* 147 */         System.out.println("A DictionaryLearning object of size " + this.N + "-by-" + this.K + " is made and DD is used."); 
-/*     */     } else {
-/* 150 */       this.DD = null;
-/* 151 */       this.mp = new MatchingPursuit(this.D);
-/* 152 */       if (this.verbose)
-/* 152 */         System.out.println("A DictionaryLearning object of size " + this.N + "-by-" + this.K + " is made without using DD."); 
-/*     */     } 
-/* 155 */     this.mp.setNormalized();
-/*     */   }
-/*     */   
-/*     */   public DictionaryLearning(AllMatrices paramAllMatrices, boolean paramBoolean) {
-/* 161 */     this(paramAllMatrices, paramBoolean, 0);
-/*     */   }
-/*     */   
-/*     */   public SimpleMatrix getDictionary() {
-/* 168 */     return this.D;
-/*     */   }
-/*     */   
-/*     */   public SymmetricMatrix getInnerProductMatrix() {
-/* 169 */     return this.DD;
-/*     */   }
-/*     */   
-/*     */   public SymmetricMatrix getTheCMatrix() {
-/* 170 */     return this.C;
-/*     */   }
-/*     */   
-/*     */   public double[] getWeights() {
-/* 171 */     return this.w;
-/*     */   }
-/*     */   
-/*     */   public double[] getResidual() {
-/* 172 */     return this.r;
-/*     */   }
-/*     */   
-/*     */   public double[] getx() {
-/* 173 */     return this.x;
-/*     */   }
-/*     */   
-/*     */   public double[] getw() {
-/* 174 */     return this.w;
-/*     */   }
-/*     */   
-/*     */   public double[] getr() {
-/* 175 */     return this.r;
-/*     */   }
-/*     */   
-/*     */   public double[] getu() {
-/* 176 */     return this.u;
-/*     */   }
-/*     */   
-/*     */   public double[] getv() {
-/* 177 */     return this.v;
-/*     */   }
-/*     */   
-/*     */   public int getNoTV() {
-/* 178 */     return this.noTV;
-/*     */   }
-/*     */   
-/*     */   public int getMPMet() {
-/* 179 */     return this.mpMet;
-/*     */   }
-/*     */   
-/*     */   public int getParamI1() {
-/* 181 */     return this.paramI1;
-/*     */   }
-/*     */   
-/*     */   public double getLimitCmmr() {
-/* 182 */     return this.limitCmmr;
-/*     */   }
-/*     */   
-/*     */   public double getValueCmmr() {
-/* 183 */     return this.valueCmmr;
-/*     */   }
-/*     */   
-/*     */   public double getLimitCmax() {
-/* 184 */     return this.limitCmax;
-/*     */   }
-/*     */   
-/*     */   public double getMinCdiag() {
-/* 185 */     return this.minCdiag;
-/*     */   }
-/*     */   
-/*     */   public double getMaxCdiag() {
-/* 186 */     return this.maxCdiag;
-/*     */   }
-/*     */   
-/*     */   public double getSumxx() {
-/* 188 */     return this.sumxx;
-/*     */   }
-/*     */   
-/*     */   public double getSumww() {
-/* 189 */     return this.sumww;
-/*     */   }
-/*     */   
-/*     */   public double getSumrr() {
-/* 190 */     return this.sumrr;
-/*     */   }
-/*     */   
-/*     */   public double[] getSumAllxxTab() {
-/* 191 */     return this.sumAllxxTab;
-/*     */   }
-/*     */   
-/*     */   public double[] getSumAllwwTab() {
-/* 192 */     return this.sumAllwwTab;
-/*     */   }
-/*     */   
-/*     */   public double[] getSumAllrrTab() {
-/* 193 */     return this.sumAllrrTab;
-/*     */   }
-/*     */   
-/*     */   public double[] getSnrTab() {
-/* 194 */     return this.snrTab;
-/*     */   }
-/*     */   
-/*     */   public double[] getSumxxTab() {
-/* 195 */     return this.sumxxTab;
-/*     */   }
-/*     */   
-/*     */   public double[] getSumwwTab() {
-/* 196 */     return this.sumwwTab;
-/*     */   }
-/*     */   
-/*     */   public double[] getSumrrTab() {
-/* 197 */     return this.sumrrTab;
-/*     */   }
-/*     */   
-/*     */   public int[] getIndexW() {
-/* 199 */     int[] arrayOfInt = new int[this.nzc];
-/* 200 */     for (byte b = 0; b < this.nzc; ) {
-/* 200 */       arrayOfInt[b] = this.indexW[b];
-/* 200 */       b++;
-/*     */     } 
-/* 201 */     return arrayOfInt;
-/*     */   }
-/*     */   
-/*     */   public double[] getValueW() {
-/* 204 */     double[] arrayOfDouble = new double[this.nzc];
-/* 205 */     for (byte b = 0; b < this.nzc; ) {
-/* 205 */       arrayOfDouble[b] = this.valueW[b];
-/* 205 */       b++;
-/*     */     } 
-/* 206 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   private double increasingFun(double paramDouble1, char paramChar, double paramDouble2, double paramDouble3) {
-/* 216 */     switch (paramChar) {
-/*     */       case '1':
-/* 218 */         return 1.0D;
-/*     */       case 'L':
-/* 220 */         if (paramDouble1 < 0.0D)
-/* 221 */           return paramDouble2; 
-/* 222 */         if (paramDouble1 <= 1.0D)
-/* 223 */           return paramDouble2 + (paramDouble3 - paramDouble2) * paramDouble1; 
-/* 225 */         return paramDouble3;
-/*     */       case 'Q':
-/* 228 */         if (paramDouble1 < 0.0D)
-/* 229 */           return paramDouble2; 
-/* 230 */         if (paramDouble1 <= 1.0D) {
-/* 231 */           paramDouble1 = 1.0D - paramDouble1;
-/* 232 */           return paramDouble3 - (paramDouble3 - paramDouble2) * paramDouble1 * paramDouble1;
-/*     */         } 
-/* 234 */         return paramDouble3;
-/*     */       case 'C':
-/* 237 */         if (paramDouble1 < 0.0D)
-/* 238 */           return paramDouble2; 
-/* 239 */         if (paramDouble1 <= 1.0D) {
-/* 240 */           paramDouble1 = 1.0D - paramDouble1;
-/* 241 */           return paramDouble3 - (paramDouble3 - paramDouble2) * paramDouble1 * paramDouble1 * paramDouble1;
-/*     */         } 
-/* 243 */         return paramDouble3;
-/*     */       case 'H':
-/* 246 */         if (paramDouble1 < 0.0D)
-/* 247 */           return paramDouble2; 
-/* 249 */         return paramDouble3 - (paramDouble3 - paramDouble2) / (paramDouble1 + 1.0D);
-/*     */       case 'E':
-/* 252 */         if (paramDouble1 < 0.0D)
-/* 253 */           return paramDouble2; 
-/* 255 */         return paramDouble3 - (paramDouble3 - paramDouble2) * Math.pow(0.5D, paramDouble1);
-/*     */       case 'S':
-/* 258 */         if (paramDouble1 < 0.0D)
-/* 259 */           return paramDouble2; 
-/* 260 */         if (paramDouble1 <= 1.0D)
-/* 261 */           return paramDouble2 + (paramDouble3 - paramDouble2) * paramDouble1 * paramDouble1; 
-/* 263 */         return paramDouble3;
-/*     */       case 'T':
-/* 266 */         if (paramDouble1 < 0.0D)
-/* 267 */           return paramDouble2; 
-/* 268 */         if (paramDouble1 <= 1.0D)
-/* 269 */           return paramDouble2 + (paramDouble3 - paramDouble2) * paramDouble1 * paramDouble1 * paramDouble1; 
-/* 271 */         return paramDouble3;
-/*     */     } 
-/* 274 */     System.out.println("Illegal Met should never happen.");
-/* 277 */     return paramDouble3;
-/*     */   }
-/*     */   
-/*     */   public double getLambda() {
-/* 286 */     return increasingFun(this.noTV / this.lambdaPar, this.lambdaMet, this.lambdaLow, this.lambdaHigh);
-/*     */   }
-/*     */   
-/*     */   public double getLambda(double paramDouble) {
-/* 294 */     return increasingFun(paramDouble, this.lambdaMet, this.lambdaLow, this.lambdaHigh);
-/*     */   }
-/*     */   
-/*     */   public void setLambda(char paramChar, double paramDouble1, double paramDouble2, double paramDouble3) {
-/* 314 */     switch (paramChar) {
-/*     */       case '1':
-/* 316 */         this.lambdaMet = '1';
-/* 317 */         this.lambdaLow = 1.0D;
-/* 318 */         this.lambdaHigh = 1.0D;
-/* 319 */         this.lambdaPar = 1.0D;
-/* 320 */         if (this.verbose)
-/* 320 */           System.out.println("lambda is set to the constant 1.0."); 
-/*     */         return;
-/*     */       case 'L':
-/*     */       case 'l':
-/* 324 */         this.lambdaMet = 'L';
-/*     */         break;
-/*     */       case 'Q':
-/*     */       case 'q':
-/* 328 */         this.lambdaMet = 'Q';
-/*     */         break;
-/*     */       case 'C':
-/*     */       case 'c':
-/* 332 */         this.lambdaMet = 'C';
-/*     */         break;
-/*     */       case 'S':
-/*     */       case 's':
-/* 336 */         this.lambdaMet = 'S';
-/*     */         break;
-/*     */       case 'T':
-/*     */       case 't':
-/* 340 */         this.lambdaMet = 'T';
-/*     */         break;
-/*     */       case 'H':
-/*     */       case 'h':
-/* 344 */         this.lambdaMet = 'H';
-/*     */         break;
-/*     */       case 'E':
-/*     */       case 'e':
-/* 348 */         this.lambdaMet = 'E';
-/*     */         break;
-/*     */       default:
-/* 351 */         throw new IllegalArgumentException("The char for the method to update lambda is not a legal value.");
-/*     */     } 
-/* 355 */     if (paramDouble1 < 0.5D || paramDouble1 > 1.0D)
-/* 355 */       throw new IllegalArgumentException("lamLow not within legal (resonable) range: 0.5 <= lamLow <= 1.0."); 
-/* 357 */     this.lambdaLow = paramDouble1;
-/* 358 */     if (paramDouble2 < this.lambdaLow || paramDouble2 > 1.0D)
-/* 358 */       throw new IllegalArgumentException("lamHigh not within legal (resonable) range: lambdaLow <= lamHigh <= 1.0."); 
-/* 360 */     this.lambdaHigh = paramDouble2;
-/* 361 */     if (paramDouble3 < this.K)
-/* 361 */       throw new IllegalArgumentException("lamPar is too small, the value is normally several thousands."); 
-/* 363 */     this.lambdaPar = paramDouble3;
-/* 365 */     if (this.verbose)
-/* 366 */       System.out.println("The update method for lambda is set to: " + this.lambdaMet + " from " + this.lambdaLow + " to " + this.lambdaHigh + " and parameter " + this.lambdaPar + "."); 
-/*     */   }
-/*     */   
-/*     */   public void setBMP() {
-/* 375 */     this.mpMet = 1;
-/*     */   }
-/*     */   
-/*     */   public void setOMP() {
-/* 376 */     this.mpMet = 2;
-/*     */   }
-/*     */   
-/*     */   public void setORMP() {
-/* 377 */     this.mpMet = 3;
-/*     */   }
-/*     */   
-/*     */   public void setPS() {
-/* 378 */     this.mpMet = 4;
-/*     */   }
-/*     */   
-/*     */   public void setBMP(int paramInt) {
-/* 385 */     setMParg(paramInt, 1.0E-6D, 1.0E-6D);
-/* 386 */     this.mpMet = 1;
-/*     */   }
-/*     */   
-/*     */   public void setOMP(int paramInt, double paramDouble1, double paramDouble2) {
-/* 396 */     setMParg(paramInt, paramDouble1, paramDouble2);
-/* 397 */     this.mpMet = 2;
-/*     */   }
-/*     */   
-/*     */   public void setORMP(int paramInt, double paramDouble1, double paramDouble2) {
-/* 407 */     setMParg(paramInt, paramDouble1, paramDouble2);
-/* 408 */     this.mpMet = 3;
-/*     */   }
-/*     */   
-/*     */   public void setPS(int paramInt1, double paramDouble1, double paramDouble2, int paramInt2) {
-/* 419 */     setMParg(paramInt1, paramDouble1, paramDouble2);
-/* 420 */     this.mpComb = paramInt2;
-/* 421 */     this.mpMet = 4;
-/*     */   }
-/*     */   
-/*     */   private void setMParg(int paramInt, double paramDouble1, double paramDouble2) {
-/* 425 */     this.mpS = paramInt;
-/* 427 */     if (this.mpS < 1) {
-/* 428 */       System.out.println("Number of non-zeros is smaller than one. Set it to 1.");
-/* 429 */       this.mpS = 1;
-/*     */     } 
-/* 431 */     if (this.mpS >= this.N) {
-/* 432 */       System.out.println("Number of non-zeros is too large. Set it to 1.");
-/* 433 */       this.mpS = 1;
-/*     */     } 
-/* 435 */     this.mpRelErr = paramDouble1;
-/* 436 */     this.mpAbsErr = paramDouble2;
-/*     */   }
-/*     */   
-/*     */   public void setLoggOn() {
-/* 440 */     this.loggActive = true;
-/*     */   }
-/*     */   
-/*     */   public void setLoggOff() {
-/* 441 */     this.loggActive = false;
-/*     */   }
-/*     */   
-/*     */   public void setParamI1(int paramInt) {
-/* 442 */     this.paramI1 = paramInt;
-/*     */   }
-/*     */   
-/*     */   public void setLimitCmmr(double paramDouble) {
-/* 443 */     this.limitCmmr = paramDouble;
-/*     */   }
-/*     */   
-/*     */   public void setLimitCmax(double paramDouble) {
-/* 444 */     this.limitCmax = paramDouble;
-/*     */   }
-/*     */   
-/*     */   public void setVerbose(int paramInt) {
-/* 452 */     if (paramInt < 0)
-/* 452 */       throw new IllegalArgumentException("Verbose level should be given as a non-zero positive integer."); 
-/* 454 */     if (paramInt == 0) {
-/* 455 */       this.verbose = false;
-/* 456 */       this.veryVerbose = false;
-/* 457 */     } else if (paramInt == 1) {
-/* 458 */       this.verbose = true;
-/* 459 */       this.veryVerbose = false;
-/*     */     } else {
-/* 461 */       this.verbose = true;
-/* 462 */       this.veryVerbose = true;
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   private void verbosePrintln(int paramInt) {
-/* 471 */     System.out.println("Iteration " + (paramInt + 1) + " : " + "noTV = " + this.noTV + ", lambdaPar = " + this.lambdaPar + ", lambda = " + getLambda(this.noTV / this.lambdaPar) + ", SNR = " + this.snrTab[paramInt]);
-/* 478 */     if (this.veryVerbose) {
-/* 479 */       doNormalizationSlow();
-/* 480 */       System.out.println("Iteration " + (paramInt + 1) + " : " + "normF of C is " + this.C.normF() + " and trace of C is " + this.C.trace() + ".");
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   private void doNormalizationFast() {
-/* 489 */     double d = 0.0D;
-/* 490 */     for (byte b = 0; b < this.K; b++) {
-/* 491 */       double d1 = this.D.innerProduct(b, b);
-/* 492 */       if (d1 > 0.0D) {
-/* 493 */         this.G.set(b, 1.0D / Math.sqrt(d1));
-/* 494 */         d += Math.abs(1.0D - d1);
-/*     */       } else {
-/* 496 */         this.G.set(b, 1.0D);
-/*     */       } 
-/*     */     } 
-/* 499 */     if (d > 0.1D) {
-/* 500 */       this.D.timeseqScaleColumns(this.G);
-/* 501 */       this.mp.setNormalized();
-/* 502 */       this.C.eqScaleRowsAndColumns(this.G, this.C);
-/* 503 */       if (this.DD != null)
-/* 503 */         this.DD.eqScaleRowsAndColumns(this.G, this.DD); 
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   private void doNormalizationSlow() {
-/* 509 */     for (byte b = 0; b < this.K; b++) {
-/* 510 */       double d = this.D.innerProduct(b, b);
-/* 511 */       if (d > 0.0D) {
-/* 512 */         this.G.set(b, 1.0D / Math.sqrt(d));
-/*     */       } else {
-/* 514 */         this.G.set(b, 1.0D);
-/*     */       } 
-/*     */     } 
-/* 517 */     this.D.timeseqScaleColumns(this.G);
-/* 518 */     this.mp.setNormalized();
-/* 519 */     this.C.eqScaleRowsAndColumns(this.G, this.C);
-/* 520 */     if (this.DD != null)
-/* 520 */       this.DD.eqTProduct(this.D, this.D); 
-/*     */   }
-/*     */   
-/*     */   public void rlsdla(double[] paramArrayOfdouble, int paramInt) {
-/* 535 */     if (paramArrayOfdouble.length < this.N)
-/* 535 */       throw new IllegalArgumentException("The supplied data is too short."); 
-/* 537 */     int i = paramArrayOfdouble.length / this.N;
-/* 540 */     double d1 = 0.0D;
-/* 541 */     double d2 = 0.0D;
-/* 542 */     double d3 = 0.0D;
-/* 543 */     if (this.loggActive) {
-/* 545 */       this.sumAllxxTab = new double[paramInt];
-/* 546 */       this.sumAllwwTab = new double[paramInt];
-/* 547 */       this.sumAllrrTab = new double[paramInt];
-/* 548 */       this.snrTab = new double[paramInt];
-/* 550 */       this.sumxxTab = new double[i];
-/* 551 */       this.sumwwTab = new double[i];
-/* 552 */       this.sumrrTab = new double[i];
-/*     */     } 
-/* 555 */     this.indexW = new int[i * this.mpS];
-/* 556 */     this.valueW = new double[i * this.mpS];
-/* 557 */     this.nzc = 0;
-/*     */     byte b;
-/* 559 */     for (b = 0; b < paramInt; b++) {
-/* 560 */       if (this.loggActive) {
-/* 561 */         d1 = 0.0D;
-/* 562 */         d2 = 0.0D;
-/* 563 */         d3 = 0.0D;
-/*     */       } 
-/* 565 */       for (byte b1 = 0; b1 < i; b1++) {
-/*     */         byte b2;
-/* 566 */         for (b2 = 0; b2 < this.N; b2++)
-/* 567 */           this.x[b2] = paramArrayOfdouble[b1 * this.N + b2]; 
-/* 569 */         if (Double.isNaN(this.D.get(0, 0))) {
-/* 570 */           if (this.verbose)
-/* 570 */             System.out.println("Error in rlsdla, noTV = " + this.noTV + ", dictionary is NaN, return! "); 
-/*     */           return;
-/*     */         } 
-/* 574 */         rlsdla1(this.x);
-/* 575 */         if (this.loggActive) {
-/* 576 */           d1 += this.sumxx;
-/* 577 */           d2 += this.sumww;
-/* 578 */           d3 += this.sumrr;
-/* 579 */           if (b == paramInt - 1) {
-/* 580 */             this.sumxxTab[b1] = this.sumxx;
-/* 581 */             this.sumwwTab[b1] = this.sumww;
-/* 582 */             this.sumrrTab[b1] = this.sumrr;
-/* 583 */             for (b2 = 0; b2 < this.K; ) {
-/* 583 */               if (this.w[b2] != 0.0D) {
-/* 584 */                 this.indexW[this.nzc] = b1 * this.K + b2;
-/* 585 */                 this.valueW[this.nzc] = this.w[b2];
-/* 586 */                 this.nzc++;
-/*     */               } 
-/*     */               b2++;
-/*     */             } 
-/*     */           } 
-/*     */         } 
-/*     */       } 
-/* 591 */       if (this.loggActive) {
-/* 592 */         this.sumAllxxTab[b] = d1;
-/* 593 */         this.sumAllwwTab[b] = d2;
-/* 594 */         this.sumAllrrTab[b] = d3;
-/* 595 */         this.snrTab[b] = 10.0D * Math.log10(d1 / d3);
-/* 596 */         if (this.verbose)
-/* 596 */           verbosePrintln(b); 
-/*     */       } 
-/*     */     } 
-/* 599 */     doNormalizationSlow();
-/* 600 */     if (this.loggActive)
-/* 601 */       for (b = 0; b < this.nzc; b++) {
-/* 602 */         int j = this.indexW[b] % this.K;
-/* 603 */         this.valueW[b] = this.valueW[b] / this.G.get(j);
-/*     */       }  
-/*     */   }
-/*     */   
-/*     */   public void rlsdla1(double[] paramArrayOfdouble) {
-/* 620 */     this.noTV++;
-/* 622 */     this.sumxx = 0.0D;
-/*     */     int i;
-/* 623 */     for (i = 0; i < this.N; ) {
-/* 623 */       this.sumxx += paramArrayOfdouble[i] * paramArrayOfdouble[i];
-/* 623 */       i++;
-/*     */     } 
-/* 625 */     i = 0;
-/* 626 */     switch (this.mpMet) {
-/*     */       case 1:
-/* 628 */         this.mp.vsBMP(paramArrayOfdouble, this.w, this.mpS);
-/*     */         break;
-/*     */       case 2:
-/* 631 */         i = this.mp.vsOMPorORMP2(paramArrayOfdouble, this.w, this.mpS, Math.max(this.mpAbsErr / Math.sqrt(this.sumxx), this.mpRelErr), true);
-/*     */         break;
-/*     */       case 3:
-/* 634 */         i = this.mp.vsOMPorORMP2(paramArrayOfdouble, this.w, this.mpS, Math.max(this.mpAbsErr / Math.sqrt(this.sumxx), this.mpRelErr), false);
-/*     */         break;
-/*     */       case 4:
-/* 637 */         this.mp.vsPS(paramArrayOfdouble, this.w, this.mpS, Math.max(this.mpAbsErr / Math.sqrt(this.sumxx), this.mpRelErr), this.mpComb);
-/*     */         break;
-/*     */       default:
-/* 640 */         System.out.println("Illegal mpMet should never happen.");
-/*     */         break;
-/*     */     } 
-/* 643 */     if (i < 0) {
-/* 644 */       if (this.veryVerbose)
-/* 644 */         System.out.println("Error in OMP/ORMP, noTV = " + this.noTV + ", ignore this training vector. "); 
-/*     */       return;
-/*     */     } 
-/* 650 */     if (this.loggActive) {
-/* 651 */       this.sumww = 0.0D;
-/* 652 */       for (byte b = 0; b < this.K; ) {
-/* 652 */         if (this.w[b] != 0.0D)
-/* 652 */           this.sumww += this.w[b] * this.w[b]; 
-/* 652 */         b++;
-/*     */       } 
-/*     */     } 
-/* 655 */     this.sumrr = 0.0D;
-/* 656 */     this.D.times(this.w, this.r);
-/*     */     byte b1;
-/* 657 */     for (b1 = 0; b1 < this.N; b1++) {
-/* 658 */       this.r[b1] = paramArrayOfdouble[b1] - this.r[b1];
-/* 659 */       this.sumrr += this.r[b1] * this.r[b1];
-/*     */     } 
-/* 662 */     b1 = 0;
-/* 663 */     if (this.lambdaMet != '1') {
-/* 666 */       double d1 = getLambda(this.noTV / this.lambdaPar);
-/* 668 */       if (d1 < 0.994D) {
-/* 669 */         if (checkC()) {
-/* 670 */           this.C.eqProduct(this.C, 1.0D / d1);
-/* 671 */           b1 = (this.valueCmmr > this.limitCmmr) ? 1 : 0;
-/*     */         } 
-/* 673 */       } else if (d1 < 0.9993D) {
-/* 674 */         if (this.noTV % 16 == 0 && 
-/* 675 */           checkC()) {
-/* 676 */           this.C.eqProduct(this.C, 17.0D - 16.0D * d1);
-/* 677 */           b1 = (this.valueCmmr > this.limitCmmr) ? 1 : 0;
-/*     */         } 
-/* 680 */       } else if (d1 < 0.99991D) {
-/* 681 */         if (this.noTV % 128 == 0 && 
-/* 682 */           checkC()) {
-/* 683 */           this.C.eqProduct(this.C, 129.0D - 128.0D * d1);
-/* 684 */           b1 = (this.valueCmmr > this.limitCmmr) ? 1 : 0;
-/*     */         } 
-/* 687 */       } else if (d1 < 1.0D && 
-/* 688 */         this.noTV % 1024 == 0 && 
-/* 689 */         checkC()) {
-/* 690 */         this.C.eqProduct(this.C, 1025.0D - 1024.0D * d1);
-/* 691 */         b1 = (this.valueCmmr > this.limitCmmr) ? 1 : 0;
-/*     */       } 
-/*     */     } 
-/* 697 */     this.C.times(this.w, this.u);
-/* 699 */     double d = 1.0D;
-/* 700 */     for (byte b2 = 0; b2 < this.K; b2++) {
-/* 701 */       if (this.w[b2] != 0.0D)
-/* 701 */         d += this.w[b2] * this.u[b2]; 
-/*     */     } 
-/* 703 */     d = 1.0D / d;
-/* 705 */     if (this.DD != null)
-/* 706 */       this.D.transposeTimes(this.r, this.v); 
-/* 708 */     this.D.pluseqOuterProduct(1.0D, d, this.r, this.u);
-/* 709 */     this.mp.clearNormalized();
-/* 711 */     if (this.DD != null) {
-/* 712 */       this.DD.pluseqOuterProduct(1.0D, d, this.u, this.v);
-/* 713 */       this.DD.pluseqOuterProduct(1.0D, d * d * this.sumrr, this.u);
-/*     */     } 
-/* 720 */     this.C.pluseqOuterProduct(1.0D, -d, this.u);
-/* 723 */     if (b1 != 0) {
-/* 724 */       double d1 = this.C.get(0, 0);
-/* 725 */       this.maxCdiag = d1;
-/* 726 */       this.minCdiag = d1;
-/* 727 */       byte b3 = 0;
-/* 728 */       byte b4 = 0;
-/*     */       byte b5;
-/* 729 */       for (b5 = 1; b5 < this.K; b5++) {
-/* 730 */         d1 = this.C.get(b5, b5);
-/* 731 */         if (d1 > this.maxCdiag) {
-/* 731 */           this.maxCdiag = d1;
-/* 731 */           b3 = b5;
-/*     */         } 
-/* 732 */         if (d1 < this.minCdiag) {
-/* 732 */           this.minCdiag = d1;
-/* 732 */           b4 = b5;
-/*     */         } 
-/*     */       } 
-/* 737 */       this.D.getColumn(b3, paramArrayOfdouble);
-/* 738 */       this.D.getColumn(b4, this.r);
-/* 739 */       for (b5 = 0; b5 < this.N; ) {
-/* 739 */         paramArrayOfdouble[b5] = 0.9D * paramArrayOfdouble[b5] + 0.11D * this.r[b5];
-/* 739 */         b5++;
-/*     */       } 
-/* 740 */       this.D.setColumn(b3, paramArrayOfdouble);
-/* 742 */       doNormalizationSlow();
-/* 743 */     } else if (this.noTV % 32768 == 0) {
-/* 744 */       doNormalizationSlow();
-/* 745 */     } else if (this.noTV % this.paramI1 == 0) {
-/* 746 */       doNormalizationFast();
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   private boolean checkC() {
-/* 755 */     double d = this.C.get(0, 0);
-/* 756 */     this.maxCdiag = d;
-/* 757 */     this.minCdiag = d;
-/*     */     byte b;
-/* 758 */     for (b = 1; b < this.K; b++) {
-/* 759 */       d = this.C.get(b, b);
-/* 760 */       if (d > this.maxCdiag)
-/* 760 */         this.maxCdiag = d; 
-/* 761 */       if (d < this.minCdiag)
-/* 761 */         this.minCdiag = d; 
-/*     */     } 
-/* 764 */     if (this.minCdiag <= 0.0D) {
-/* 765 */       this.minCdiag = this.maxCdiag / this.valueCmmr;
-/* 766 */       for (b = 0; b < this.K; b++) {
-/* 767 */         if (this.C.get(b, b) <= 0.0D)
-/* 767 */           this.C.set(b, b, this.minCdiag); 
-/* 768 */         if (this.veryVerbose)
-/* 768 */           System.out.println("checkC: let element  " + b + " in diagonal of C matrix be " + this.minCdiag); 
-/*     */       } 
-/*     */     } 
-/* 773 */     this.valueCmmr = this.maxCdiag / this.minCdiag;
-/* 774 */     return (this.maxCdiag < this.limitCmax);
-/*     */   }
-/*     */   
-/*     */   public void ilsdla(double[] paramArrayOfdouble, int paramInt) {
-/* 789 */     setLoggOn();
-/* 790 */     if (paramArrayOfdouble.length < this.N)
-/* 790 */       throw new IllegalArgumentException("The supplied data is too short."); 
-/* 792 */     int i = paramArrayOfdouble.length / this.N;
-/* 794 */     SimpleMatrix simpleMatrix = new SimpleMatrix(this.N, this.K);
-/* 795 */     SymmetricMatrix symmetricMatrix = new SymmetricMatrix(this.K, this.K);
-/* 799 */     this.sumAllxxTab = new double[paramInt];
-/* 800 */     this.sumAllwwTab = new double[paramInt];
-/* 801 */     this.sumAllrrTab = new double[paramInt];
-/* 802 */     this.snrTab = new double[paramInt];
-/* 804 */     this.sumxxTab = new double[i];
-/* 805 */     this.sumwwTab = new double[i];
-/* 806 */     this.sumrrTab = new double[i];
-/* 808 */     this.indexW = new int[i * this.mpS];
-/* 809 */     this.valueW = new double[i * this.mpS];
-/* 810 */     double d = 0.0D;
-/* 812 */     for (byte b = 0; b < paramInt; b++) {
-/* 813 */       double d1 = 0.0D;
-/* 814 */       double d2 = 0.0D;
-/* 815 */       int j = 0;
-/* 816 */       this.nzc = 0;
-/* 817 */       simpleMatrix.eqZeros();
-/* 818 */       symmetricMatrix.eqZeros();
-/*     */       byte b1;
-/* 820 */       for (b1 = 0; b1 < i; b1++) {
-/* 823 */         if (b == 0) {
-/* 824 */           this.sumxx = 0.0D;
-/* 825 */           for (byte b4 = 0; b4 < this.N; b4++) {
-/* 826 */             this.x[b4] = paramArrayOfdouble[b1 * this.N + b4];
-/* 827 */             this.sumxx += this.x[b4] * this.x[b4];
-/*     */           } 
-/* 829 */           this.sumxxTab[b1] = this.sumxx;
-/* 830 */           d += this.sumxx;
-/*     */         } else {
-/* 832 */           for (byte b4 = 0; b4 < this.N; ) {
-/* 832 */             this.x[b4] = paramArrayOfdouble[b1 * this.N + b4];
-/* 832 */             b4++;
-/*     */           } 
-/* 833 */           this.sumxx = this.sumxxTab[b1];
-/*     */         } 
-/* 837 */         switch (this.mpMet) {
-/*     */           case 1:
-/* 839 */             this.mp.vsBMP(this.x, this.w, this.mpS);
-/*     */             break;
-/*     */           case 2:
-/* 842 */             this.mp.vsOMPorORMP(this.x, this.w, this.mpS, Math.max(this.mpAbsErr / Math.sqrt(this.sumxx), this.mpRelErr), true);
-/*     */             break;
-/*     */           case 3:
-/* 845 */             this.mp.vsOMPorORMP(this.x, this.w, this.mpS, Math.max(this.mpAbsErr / Math.sqrt(this.sumxx), this.mpRelErr), false);
-/*     */             break;
-/*     */           case 4:
-/* 848 */             this.mp.vsPS(this.x, this.w, this.mpS, Math.max(this.mpAbsErr / Math.sqrt(this.sumxx), this.mpRelErr), this.mpComb);
-/*     */             break;
-/*     */           default:
-/* 851 */             System.out.println("Illegal mpMet should never happen.");
-/*     */             break;
-/*     */         } 
-/* 854 */         simpleMatrix.pluseqOuterProduct(1.0D, 1.0D, this.x, this.w);
-/* 857 */         int[] arrayOfInt = new int[this.mpS];
-/* 858 */         byte b2 = 0;
-/*     */         byte b3;
-/* 859 */         for (b3 = 0; b3 < this.K; ) {
-/* 859 */           if (this.w[b3] != 0.0D)
-/* 859 */             arrayOfInt[b2++] = b3; 
-/* 859 */           b3++;
-/*     */         } 
-/* 860 */         j += b2;
-/* 861 */         for (b3 = 0; b3 < b2; b3++) {
-/* 862 */           int k = arrayOfInt[b3];
-/* 863 */           for (byte b4 = 0; b4 <= b3; b4++) {
-/* 864 */             int m = arrayOfInt[b4];
-/* 865 */             double d3 = symmetricMatrix.get(k, m) + this.w[k] * this.w[m];
-/* 866 */             symmetricMatrix.set(k, m, d3);
-/*     */           } 
-/*     */         } 
-/* 873 */         if (this.loggActive) {
-/* 875 */           this.sumww = 0.0D;
-/* 876 */           for (b3 = 0; b3 < this.K; ) {
-/* 876 */             if (this.w[b3] != 0.0D)
-/* 876 */               this.sumww += this.w[b3] * this.w[b3]; 
-/* 876 */             b3++;
-/*     */           } 
-/* 877 */           d1 += this.sumww;
-/* 878 */           this.sumrr = 0.0D;
-/* 879 */           this.D.times(this.w, this.r);
-/* 880 */           for (b3 = 0; b3 < this.N; b3++) {
-/* 881 */             this.r[b3] = this.x[b3] - this.r[b3];
-/* 882 */             this.sumrr += this.r[b3] * this.r[b3];
-/*     */           } 
-/* 884 */           d2 += this.sumrr;
-/* 885 */           this.sumwwTab[b1] = this.sumww;
-/* 886 */           this.sumrrTab[b1] = this.sumrr;
-/* 887 */           for (b3 = 0; b3 < this.K; ) {
-/* 887 */             if (this.w[b3] != 0.0D) {
-/* 888 */               this.indexW[this.nzc] = b1 * this.K + b3;
-/* 889 */               this.valueW[this.nzc] = this.w[b3];
-/* 890 */               this.nzc++;
-/*     */             } 
-/*     */             b3++;
-/*     */           } 
-/*     */         } 
-/*     */       } 
-/* 894 */       this.noTV += i;
-/* 896 */       this.C.eqInverse(symmetricMatrix);
-/* 897 */       this.D.eqProduct(simpleMatrix, this.C);
-/* 898 */       doNormalizationSlow();
-/* 900 */       if (b == paramInt - 1)
-/* 901 */         for (b1 = 0; b1 < this.nzc; b1++) {
-/* 902 */           int k = this.indexW[b1] % this.K;
-/* 903 */           this.valueW[b1] = this.valueW[b1] / this.G.get(k);
-/*     */         }  
-/* 906 */       if (this.loggActive) {
-/* 907 */         this.sumAllxxTab[b] = d;
-/* 908 */         this.sumAllwwTab[b] = d1;
-/* 916 */         this.sumAllrrTab[b] = d2;
-/* 917 */         this.snrTab[b] = 10.0D * Math.log10(d / d2);
-/* 918 */         if (this.verbose) {
-/* 919 */           System.out.println("Iteration " + (b + 1) + " : noTV = " + this.noTV + ", non-zeros in W = " + j + ", SNR = " + this.snrTab[b]);
-/* 921 */           if (this.veryVerbose) {
-/* 922 */             System.out.println("Iteration " + (b + 1) + " : " + "normF of C is " + this.C.normF() + " and trace of C is " + this.C.trace() + ".");
-/* 925 */             System.out.println("and  sumSignalSquared = " + d + "  sumWeightSquared = " + d1 + "  sumErrorSquared = " + d2);
-/*     */           } 
-/*     */         } 
-/*     */       } 
-/*     */     } 
-/*     */   }
-/*     */ }
+// Decompiled by Jad v1.5.8g. Copyright 2001 Pavel Kouznetsov.
+// Jad home page: http://www.kpdus.com/jad.html
+// Decompiler options: packimports(3) 
+// Source File Name:   DictionaryLearning.java
 
+package mpv2;
 
-/* Location:              /Users/liuzenglu/codebase/Dict_Coding/javaclasses/!/mpv2/DictionaryLearning.class
- * Java compiler version: 5 (49.0)
- * JD-Core Version:       1.1.3
- */
+import java.io.PrintStream;
+
+// Referenced classes of package mpv2:
+//            SimpleMatrix, DiagonalMatrix, SymmetricMatrix, MatchingPursuit, 
+//            AllMatrices
+
+public class DictionaryLearning
+{
+
+    public DictionaryLearning(AllMatrices allmatrices, boolean flag, int i)
+    {
+        lambdaMet = '1';
+        lambdaLow = 1.0D;
+        lambdaHigh = 1.0D;
+        lambdaPar = 20000D;
+        mpMet = 2;
+        mpS = 2;
+        mpRelErr = 9.9999999999999995E-007D;
+        mpAbsErr = 9.9999999999999995E-007D;
+        mpComb = 50;
+        paramI1 = 128;
+        minCdiag = 1E+018D;
+        maxCdiag = 0.0D;
+        valueCmmr = 1000000D;
+        limitCmax = 0.0D;
+        limitCmmr = 1000000D;
+        verbose = false;
+        veryVerbose = false;
+        loggActive = true;
+        sumxx = 0.0D;
+        sumww = 0.0D;
+        sumrr = 0.0D;
+        nzc = 0;
+        N = allmatrices.getN();
+        K = allmatrices.getK();
+        noTV = K;
+        D = new SimpleMatrix(allmatrices);
+        G = new DiagonalMatrix(K, 1.0D);
+        C = new SymmetricMatrix(K, K);
+        x = new double[N];
+        w = new double[K];
+        r = new double[N];
+        u = new double[K];
+        v = new double[K];
+        setVerbose(i);
+        for(int j = 0; j < K; j++)
+        {
+            double d = D.innerProduct(j, j);
+            if(d > 0.0D)
+            {
+                d = 1.0D / d;
+                if(d > maxCdiag)
+                    maxCdiag = d;
+                if(d < minCdiag)
+                    minCdiag = d;
+                C.set(j, j, d);
+                G.set(j, Math.sqrt(d));
+            } else
+            {
+                System.out.println((new StringBuilder()).append("Warning: 2-norm of dictionary vector ").append(j).append(" is less or equal to zero.").toString());
+                C.set(j, j, 1.0D);
+                G.set(j, 1.0D);
+            }
+            valueCmmr = maxCdiag / minCdiag;
+            limitCmax = 4D * maxCdiag;
+        }
+
+        D.timeseqScaleColumns(G);
+        if(flag)
+        {
+            DD = SymmetricMatrix.innerProductMatrix(D);
+            mp = new MatchingPursuit(D, DD);
+            if(verbose)
+                System.out.println((new StringBuilder()).append("A DictionaryLearning object of size ").append(N).append("-by-").append(K).append(" is made and DD is used.").toString());
+        } else
+        {
+            DD = null;
+            mp = new MatchingPursuit(D);
+            if(verbose)
+                System.out.println((new StringBuilder()).append("A DictionaryLearning object of size ").append(N).append("-by-").append(K).append(" is made without using DD.").toString());
+        }
+        mp.setNormalized();
+    }
+
+    public DictionaryLearning(AllMatrices allmatrices, boolean flag)
+    {
+        this(allmatrices, flag, 0);
+    }
+
+    public SimpleMatrix getDictionary()
+    {
+        return D;
+    }
+
+    public SymmetricMatrix getInnerProductMatrix()
+    {
+        return DD;
+    }
+
+    public SymmetricMatrix getTheCMatrix()
+    {
+        return C;
+    }
+
+    public double[] getWeights()
+    {
+        return w;
+    }
+
+    public double[] getResidual()
+    {
+        return r;
+    }
+
+    public double[] getx()
+    {
+        return x;
+    }
+
+    public double[] getw()
+    {
+        return w;
+    }
+
+    public double[] getr()
+    {
+        return r;
+    }
+
+    public double[] getu()
+    {
+        return u;
+    }
+
+    public double[] getv()
+    {
+        return v;
+    }
+
+    public int getNoTV()
+    {
+        return noTV;
+    }
+
+    public int getMPMet()
+    {
+        return mpMet;
+    }
+
+    public int getParamI1()
+    {
+        return paramI1;
+    }
+
+    public double getLimitCmmr()
+    {
+        return limitCmmr;
+    }
+
+    public double getValueCmmr()
+    {
+        return valueCmmr;
+    }
+
+    public double getLimitCmax()
+    {
+        return limitCmax;
+    }
+
+    public double getMinCdiag()
+    {
+        return minCdiag;
+    }
+
+    public double getMaxCdiag()
+    {
+        return maxCdiag;
+    }
+
+    public double getSumxx()
+    {
+        return sumxx;
+    }
+
+    public double getSumww()
+    {
+        return sumww;
+    }
+
+    public double getSumrr()
+    {
+        return sumrr;
+    }
+
+    public double[] getSumAllxxTab()
+    {
+        return sumAllxxTab;
+    }
+
+    public double[] getSumAllwwTab()
+    {
+        return sumAllwwTab;
+    }
+
+    public double[] getSumAllrrTab()
+    {
+        return sumAllrrTab;
+    }
+
+    public double[] getSnrTab()
+    {
+        return snrTab;
+    }
+
+    public double[] getSumxxTab()
+    {
+        return sumxxTab;
+    }
+
+    public double[] getSumwwTab()
+    {
+        return sumwwTab;
+    }
+
+    public double[] getSumrrTab()
+    {
+        return sumrrTab;
+    }
+
+    public int[] getIndexW()
+    {
+        int ai[] = new int[nzc];
+        for(int i = 0; i < nzc; i++)
+            ai[i] = indexW[i];
+
+        return ai;
+    }
+
+    public double[] getValueW()
+    {
+        double ad[] = new double[nzc];
+        for(int i = 0; i < nzc; i++)
+            ad[i] = valueW[i];
+
+        return ad;
+    }
+
+    private double increasingFun(double d, char c, double d1, double d2)
+    {
+        switch(c)
+        {
+        case 49: // '1'
+            return 1.0D;
+
+        case 76: // 'L'
+            if(d < 0.0D)
+                return d1;
+            if(d <= 1.0D)
+                return d1 + (d2 - d1) * d;
+            else
+                return d2;
+
+        case 81: // 'Q'
+            if(d < 0.0D)
+                return d1;
+            if(d <= 1.0D)
+            {
+                d = 1.0D - d;
+                return d2 - (d2 - d1) * d * d;
+            } else
+            {
+                return d2;
+            }
+
+        case 67: // 'C'
+            if(d < 0.0D)
+                return d1;
+            if(d <= 1.0D)
+            {
+                d = 1.0D - d;
+                return d2 - (d2 - d1) * d * d * d;
+            } else
+            {
+                return d2;
+            }
+
+        case 72: // 'H'
+            if(d < 0.0D)
+                return d1;
+            else
+                return d2 - (d2 - d1) / (d + 1.0D);
+
+        case 69: // 'E'
+            if(d < 0.0D)
+                return d1;
+            else
+                return d2 - (d2 - d1) * Math.pow(0.5D, d);
+
+        case 83: // 'S'
+            if(d < 0.0D)
+                return d1;
+            if(d <= 1.0D)
+                return d1 + (d2 - d1) * d * d;
+            else
+                return d2;
+
+        case 84: // 'T'
+            if(d < 0.0D)
+                return d1;
+            if(d <= 1.0D)
+                return d1 + (d2 - d1) * d * d * d;
+            else
+                return d2;
+        }
+        System.out.println("Illegal Met should never happen.");
+        return d2;
+    }
+
+    public double getLambda()
+    {
+        return increasingFun((double)noTV / lambdaPar, lambdaMet, lambdaLow, lambdaHigh);
+    }
+
+    public double getLambda(double d)
+    {
+        return increasingFun(d, lambdaMet, lambdaLow, lambdaHigh);
+    }
+
+    public void setLambda(char c, double d, double d1, double d2)
+    {
+        switch(c)
+        {
+        case 49: // '1'
+            lambdaMet = '1';
+            lambdaLow = 1.0D;
+            lambdaHigh = 1.0D;
+            lambdaPar = 1.0D;
+            if(verbose)
+                System.out.println("lambda is set to the constant 1.0.");
+            return;
+
+        case 76: // 'L'
+        case 108: // 'l'
+            lambdaMet = 'L';
+            break;
+
+        case 81: // 'Q'
+        case 113: // 'q'
+            lambdaMet = 'Q';
+            break;
+
+        case 67: // 'C'
+        case 99: // 'c'
+            lambdaMet = 'C';
+            break;
+
+        case 83: // 'S'
+        case 115: // 's'
+            lambdaMet = 'S';
+            break;
+
+        case 84: // 'T'
+        case 116: // 't'
+            lambdaMet = 'T';
+            break;
+
+        case 72: // 'H'
+        case 104: // 'h'
+            lambdaMet = 'H';
+            break;
+
+        case 69: // 'E'
+        case 101: // 'e'
+            lambdaMet = 'E';
+            break;
+
+        default:
+            throw new IllegalArgumentException("The char for the method to update lambda is not a legal value.");
+        }
+        if(d < 0.5D || d > 1.0D)
+            throw new IllegalArgumentException("lamLow not within legal (resonable) range: 0.5 <= lamLow <= 1.0.");
+        lambdaLow = d;
+        if(d1 < lambdaLow || d1 > 1.0D)
+            throw new IllegalArgumentException("lamHigh not within legal (resonable) range: lambdaLow <= lamHigh <= 1.0.");
+        lambdaHigh = d1;
+        if(d2 < (double)K)
+            throw new IllegalArgumentException("lamPar is too small, the value is normally several thousands.");
+        lambdaPar = d2;
+        if(verbose)
+            System.out.println((new StringBuilder()).append("The update method for lambda is set to: ").append(lambdaMet).append(" from ").append(lambdaLow).append(" to ").append(lambdaHigh).append(" and parameter ").append(lambdaPar).append(".").toString());
+    }
+
+    public void setBMP()
+    {
+        mpMet = 1;
+    }
+
+    public void setOMP()
+    {
+        mpMet = 2;
+    }
+
+    public void setORMP()
+    {
+        mpMet = 3;
+    }
+
+    public void setPS()
+    {
+        mpMet = 4;
+    }
+
+    public void setBMP(int i)
+    {
+        setMParg(i, 9.9999999999999995E-007D, 9.9999999999999995E-007D);
+        mpMet = 1;
+    }
+
+    public void setOMP(int i, double d, double d1)
+    {
+        setMParg(i, d, d1);
+        mpMet = 2;
+    }
+
+    public void setORMP(int i, double d, double d1)
+    {
+        setMParg(i, d, d1);
+        mpMet = 3;
+    }
+
+    public void setPS(int i, double d, double d1, int j)
+    {
+        setMParg(i, d, d1);
+        mpComb = j;
+        mpMet = 4;
+    }
+
+    private void setMParg(int i, double d, double d1)
+    {
+        mpS = i;
+        if(mpS < 1)
+        {
+            System.out.println("Number of non-zeros is smaller than one. Set it to 1.");
+            mpS = 1;
+        }
+        if(mpS >= N)
+        {
+            System.out.println("Number of non-zeros is too large. Set it to 1.");
+            mpS = 1;
+        }
+        mpRelErr = d;
+        mpAbsErr = d1;
+    }
+
+    public void setLoggOn()
+    {
+        loggActive = true;
+    }
+
+    public void setLoggOff()
+    {
+        loggActive = false;
+    }
+
+    public void setParamI1(int i)
+    {
+        paramI1 = i;
+    }
+
+    public void setLimitCmmr(double d)
+    {
+        limitCmmr = d;
+    }
+
+    public void setLimitCmax(double d)
+    {
+        limitCmax = d;
+    }
+
+    public void setVerbose(int i)
+    {
+        if(i < 0)
+            throw new IllegalArgumentException("Verbose level should be given as a non-zero positive integer.");
+        if(i == 0)
+        {
+            verbose = false;
+            veryVerbose = false;
+        } else
+        if(i == 1)
+        {
+            verbose = true;
+            veryVerbose = false;
+        } else
+        {
+            verbose = true;
+            veryVerbose = true;
+        }
+    }
+
+    private void verbosePrintln(int i)
+    {
+        System.out.println((new StringBuilder()).append("Iteration ").append(i + 1).append(" : ").append("noTV = ").append(noTV).append(", lambdaPar = ").append(lambdaPar).append(", lambda = ").append(getLambda((double)noTV / lambdaPar)).append(", SNR = ").append(snrTab[i]).toString());
+        if(veryVerbose)
+        {
+            doNormalizationSlow();
+            System.out.println((new StringBuilder()).append("Iteration ").append(i + 1).append(" : ").append("normF of C is ").append(C.normF()).append(" and trace of C is ").append(C.trace()).append(".").toString());
+        }
+    }
+
+    private void doNormalizationFast()
+    {
+        double d = 0.0D;
+        for(int i = 0; i < K; i++)
+        {
+            double d1 = D.innerProduct(i, i);
+            if(d1 > 0.0D)
+            {
+                G.set(i, 1.0D / Math.sqrt(d1));
+                d += Math.abs(1.0D - d1);
+            } else
+            {
+                G.set(i, 1.0D);
+            }
+        }
+
+        if(d > 0.10000000000000001D)
+        {
+            D.timeseqScaleColumns(G);
+            mp.setNormalized();
+            C.eqScaleRowsAndColumns(G, C);
+            if(DD != null)
+                DD.eqScaleRowsAndColumns(G, DD);
+        }
+    }
+
+    private void doNormalizationSlow()
+    {
+        for(int i = 0; i < K; i++)
+        {
+            double d = D.innerProduct(i, i);
+            if(d > 0.0D)
+                G.set(i, 1.0D / Math.sqrt(d));
+            else
+                G.set(i, 1.0D);
+        }
+
+        D.timeseqScaleColumns(G);
+        mp.setNormalized();
+        C.eqScaleRowsAndColumns(G, C);
+        if(DD != null)
+            DD.eqTProduct(D, D);
+    }
+
+    public void rlsdla(double ad[], int i)
+    {
+        if(ad.length < N)
+            throw new IllegalArgumentException("The supplied data is too short.");
+        int j = ad.length / N;
+        double d = 0.0D;
+        double d1 = 0.0D;
+        double d2 = 0.0D;
+        if(loggActive)
+        {
+            sumAllxxTab = new double[i];
+            sumAllwwTab = new double[i];
+            sumAllrrTab = new double[i];
+            snrTab = new double[i];
+            sumxxTab = new double[j];
+            sumwwTab = new double[j];
+            sumrrTab = new double[j];
+        }
+        indexW = new int[j * mpS];
+        valueW = new double[j * mpS];
+        nzc = 0;
+        for(int k = 0; k < i; k++)
+        {
+            if(loggActive)
+            {
+                d = 0.0D;
+                d1 = 0.0D;
+                d2 = 0.0D;
+            }
+            for(int i1 = 0; i1 < j; i1++)
+            {
+                for(int k1 = 0; k1 < N; k1++)
+                    x[k1] = ad[i1 * N + k1];
+
+                if(Double.isNaN(D.get(0, 0)))
+                {
+                    if(verbose)
+                        System.out.println((new StringBuilder()).append("Error in rlsdla, noTV = ").append(noTV).append(", dictionary is NaN, return! ").toString());
+                    return;
+                }
+                rlsdla1(x);
+                if(!loggActive)
+                    continue;
+                d += sumxx;
+                d1 += sumww;
+                d2 += sumrr;
+                if(k != i - 1)
+                    continue;
+                sumxxTab[i1] = sumxx;
+                sumwwTab[i1] = sumww;
+                sumrrTab[i1] = sumrr;
+                for(int l1 = 0; l1 < K; l1++)
+                    if(w[l1] != 0.0D)
+                    {
+                        indexW[nzc] = i1 * K + l1;
+                        valueW[nzc] = w[l1];
+                        nzc++;
+                    }
+
+            }
+
+            if(!loggActive)
+                continue;
+            sumAllxxTab[k] = d;
+            sumAllwwTab[k] = d1;
+            sumAllrrTab[k] = d2;
+            snrTab[k] = 10D * Math.log10(d / d2);
+            if(verbose)
+                verbosePrintln(k);
+        }
+
+        doNormalizationSlow();
+        if(loggActive)
+        {
+            for(int l = 0; l < nzc; l++)
+            {
+                int j1 = indexW[l] % K;
+                valueW[l] /= G.get(j1);
+            }
+
+        }
+    }
+
+    public void rlsdla1(double ad[])
+    {
+        noTV++;
+        sumxx = 0.0D;
+        for(int i = 0; i < N; i++)
+            sumxx += ad[i] * ad[i];
+
+        int j = 0;
+        switch(mpMet)
+        {
+        case 1: // '\001'
+            mp.vsBMP(ad, w, mpS);
+            break;
+
+        case 2: // '\002'
+            j = mp.vsOMPorORMP2(ad, w, mpS, Math.max(mpAbsErr / Math.sqrt(sumxx), mpRelErr), true);
+            break;
+
+        case 3: // '\003'
+            j = mp.vsOMPorORMP2(ad, w, mpS, Math.max(mpAbsErr / Math.sqrt(sumxx), mpRelErr), false);
+            break;
+
+        case 4: // '\004'
+            mp.vsPS(ad, w, mpS, Math.max(mpAbsErr / Math.sqrt(sumxx), mpRelErr), mpComb);
+            break;
+
+        default:
+            System.out.println("Illegal mpMet should never happen.");
+            break;
+        }
+        if(j < 0)
+        {
+            if(veryVerbose)
+                System.out.println((new StringBuilder()).append("Error in OMP/ORMP, noTV = ").append(noTV).append(", ignore this training vector. ").toString());
+            return;
+        }
+        if(loggActive)
+        {
+            sumww = 0.0D;
+            for(int k = 0; k < K; k++)
+                if(w[k] != 0.0D)
+                    sumww += w[k] * w[k];
+
+        }
+        sumrr = 0.0D;
+        D.times(w, r);
+        for(int l = 0; l < N; l++)
+        {
+            r[l] = ad[l] - r[l];
+            sumrr += r[l] * r[l];
+        }
+
+        boolean flag = false;
+        if(lambdaMet != '1')
+        {
+            double d = getLambda((double)noTV / lambdaPar);
+            if(d < 0.99399999999999999D)
+            {
+                if(checkC())
+                {
+                    C.eqProduct(C, 1.0D / d);
+                    flag = valueCmmr > limitCmmr;
+                }
+            } else
+            if(d < 0.99929999999999997D)
+            {
+                if(noTV % 16 == 0 && checkC())
+                {
+                    C.eqProduct(C, 17D - 16D * d);
+                    flag = valueCmmr > limitCmmr;
+                }
+            } else
+            if(d < 0.99990999999999997D)
+            {
+                if(noTV % 128 == 0 && checkC())
+                {
+                    C.eqProduct(C, 129D - 128D * d);
+                    flag = valueCmmr > limitCmmr;
+                }
+            } else
+            if(d < 1.0D && noTV % 1024 == 0 && checkC())
+            {
+                C.eqProduct(C, 1025D - 1024D * d);
+                flag = valueCmmr > limitCmmr;
+            }
+        }
+        C.times(w, u);
+        double d1 = 1.0D;
+        for(int i1 = 0; i1 < K; i1++)
+            if(w[i1] != 0.0D)
+                d1 += w[i1] * u[i1];
+
+        d1 = 1.0D / d1;
+        if(DD != null)
+            D.transposeTimes(r, v);
+        D.pluseqOuterProduct(1.0D, d1, r, u);
+        mp.clearNormalized();
+        if(DD != null)
+        {
+            DD.pluseqOuterProduct(1.0D, d1, u, v);
+            DD.pluseqOuterProduct(1.0D, d1 * d1 * sumrr, u);
+        }
+        C.pluseqOuterProduct(1.0D, -d1, u);
+        if(flag)
+        {
+            double d2 = C.get(0, 0);
+            maxCdiag = d2;
+            minCdiag = d2;
+            int j1 = 0;
+            int k1 = 0;
+            for(int l1 = 1; l1 < K; l1++)
+            {
+                double d3 = C.get(l1, l1);
+                if(d3 > maxCdiag)
+                {
+                    maxCdiag = d3;
+                    j1 = l1;
+                }
+                if(d3 < minCdiag)
+                {
+                    minCdiag = d3;
+                    k1 = l1;
+                }
+            }
+
+            D.getColumn(j1, ad);
+            D.getColumn(k1, r);
+            for(int i2 = 0; i2 < N; i2++)
+                ad[i2] = 0.90000000000000002D * ad[i2] + 0.11D * r[i2];
+
+            D.setColumn(j1, ad);
+            doNormalizationSlow();
+        } else
+        if(noTV % 32768 == 0)
+            doNormalizationSlow();
+        else
+        if(noTV % paramI1 == 0)
+            doNormalizationFast();
+    }
+
+    private boolean checkC()
+    {
+        double d = C.get(0, 0);
+        maxCdiag = d;
+        minCdiag = d;
+        for(int i = 1; i < K; i++)
+        {
+            double d1 = C.get(i, i);
+            if(d1 > maxCdiag)
+                maxCdiag = d1;
+            if(d1 < minCdiag)
+                minCdiag = d1;
+        }
+
+        if(minCdiag <= 0.0D)
+        {
+            minCdiag = maxCdiag / valueCmmr;
+            for(int j = 0; j < K; j++)
+            {
+                if(C.get(j, j) <= 0.0D)
+                    C.set(j, j, minCdiag);
+                if(veryVerbose)
+                    System.out.println((new StringBuilder()).append("checkC: let element  ").append(j).append(" in diagonal of C matrix be ").append(minCdiag).toString());
+            }
+
+        }
+        valueCmmr = maxCdiag / minCdiag;
+        return maxCdiag < limitCmax;
+    }
+
+    public void ilsdla(double ad[], int i)
+    {
+        setLoggOn();
+        if(ad.length < N)
+            throw new IllegalArgumentException("The supplied data is too short.");
+        int j = ad.length / N;
+        SimpleMatrix simplematrix = new SimpleMatrix(N, K);
+        SymmetricMatrix symmetricmatrix = new SymmetricMatrix(K, K);
+        sumAllxxTab = new double[i];
+        sumAllwwTab = new double[i];
+        sumAllrrTab = new double[i];
+        snrTab = new double[i];
+        sumxxTab = new double[j];
+        sumwwTab = new double[j];
+        sumrrTab = new double[j];
+        indexW = new int[j * mpS];
+        valueW = new double[j * mpS];
+        double d = 0.0D;
+        for(int k = 0; k < i; k++)
+        {
+            double d1 = 0.0D;
+            double d2 = 0.0D;
+            int l = 0;
+            nzc = 0;
+            simplematrix.eqZeros();
+            symmetricmatrix.eqZeros();
+            for(int i1 = 0; i1 < j; i1++)
+            {
+                if(k == 0)
+                {
+                    sumxx = 0.0D;
+                    for(int k1 = 0; k1 < N; k1++)
+                    {
+                        x[k1] = ad[i1 * N + k1];
+                        sumxx += x[k1] * x[k1];
+                    }
+
+                    sumxxTab[i1] = sumxx;
+                    d += sumxx;
+                } else
+                {
+                    for(int l1 = 0; l1 < N; l1++)
+                        x[l1] = ad[i1 * N + l1];
+
+                    sumxx = sumxxTab[i1];
+                }
+                switch(mpMet)
+                {
+                case 1: // '\001'
+                    mp.vsBMP(x, w, mpS);
+                    break;
+
+                case 2: // '\002'
+                    mp.vsOMPorORMP(x, w, mpS, Math.max(mpAbsErr / Math.sqrt(sumxx), mpRelErr), true);
+                    break;
+
+                case 3: // '\003'
+                    mp.vsOMPorORMP(x, w, mpS, Math.max(mpAbsErr / Math.sqrt(sumxx), mpRelErr), false);
+                    break;
+
+                case 4: // '\004'
+                    mp.vsPS(x, w, mpS, Math.max(mpAbsErr / Math.sqrt(sumxx), mpRelErr), mpComb);
+                    break;
+
+                default:
+                    System.out.println("Illegal mpMet should never happen.");
+                    break;
+                }
+                simplematrix.pluseqOuterProduct(1.0D, 1.0D, x, w);
+                int ai[] = new int[mpS];
+                int j2 = 0;
+                for(int k2 = 0; k2 < K; k2++)
+                    if(w[k2] != 0.0D)
+                        ai[j2++] = k2;
+
+                l += j2;
+                for(int l2 = 0; l2 < j2; l2++)
+                {
+                    int l3 = ai[l2];
+                    for(int i4 = 0; i4 <= l2; i4++)
+                    {
+                        int j4 = ai[i4];
+                        double d3 = symmetricmatrix.get(l3, j4) + w[l3] * w[j4];
+                        symmetricmatrix.set(l3, j4, d3);
+                    }
+
+                }
+
+                if(!loggActive)
+                    continue;
+                sumww = 0.0D;
+                for(int i3 = 0; i3 < K; i3++)
+                    if(w[i3] != 0.0D)
+                        sumww += w[i3] * w[i3];
+
+                d1 += sumww;
+                sumrr = 0.0D;
+                D.times(w, r);
+                for(int j3 = 0; j3 < N; j3++)
+                {
+                    r[j3] = x[j3] - r[j3];
+                    sumrr += r[j3] * r[j3];
+                }
+
+                d2 += sumrr;
+                sumwwTab[i1] = sumww;
+                sumrrTab[i1] = sumrr;
+                for(int k3 = 0; k3 < K; k3++)
+                    if(w[k3] != 0.0D)
+                    {
+                        indexW[nzc] = i1 * K + k3;
+                        valueW[nzc] = w[k3];
+                        nzc++;
+                    }
+
+            }
+
+            noTV += j;
+            C.eqInverse(symmetricmatrix);
+            D.eqProduct(simplematrix, C);
+            doNormalizationSlow();
+            if(k == i - 1)
+            {
+                for(int j1 = 0; j1 < nzc; j1++)
+                {
+                    int i2 = indexW[j1] % K;
+                    valueW[j1] /= G.get(i2);
+                }
+
+            }
+            if(!loggActive)
+                continue;
+            sumAllxxTab[k] = d;
+            sumAllwwTab[k] = d1;
+            sumAllrrTab[k] = d2;
+            snrTab[k] = 10D * Math.log10(d / d2);
+            if(!verbose)
+                continue;
+            System.out.println((new StringBuilder()).append("Iteration ").append(k + 1).append(" : noTV = ").append(noTV).append(", non-zeros in W = ").append(l).append(", SNR = ").append(snrTab[k]).toString());
+            if(veryVerbose)
+            {
+                System.out.println((new StringBuilder()).append("Iteration ").append(k + 1).append(" : ").append("normF of C is ").append(C.normF()).append(" and trace of C is ").append(C.trace()).append(".").toString());
+                System.out.println((new StringBuilder()).append("and  sumSignalSquared = ").append(d).append("  sumWeightSquared = ").append(d1).append("  sumErrorSquared = ").append(d2).toString());
+            }
+        }
+
+    }
+
+    private int N;
+    private int K;
+    private SimpleMatrix D;
+    private SymmetricMatrix DD;
+    private SymmetricMatrix C;
+    private DiagonalMatrix G;
+    private char lambdaMet;
+    private double lambdaLow;
+    private double lambdaHigh;
+    private double lambdaPar;
+    public static final int BMP = 1;
+    public static final int OMP = 2;
+    public static final int ORMP = 3;
+    public static final int PS = 4;
+    private MatchingPursuit mp;
+    private int mpMet;
+    private int mpS;
+    private double mpRelErr;
+    private double mpAbsErr;
+    private int mpComb;
+    private int paramI1;
+    private double minCdiag;
+    private double maxCdiag;
+    private double valueCmmr;
+    private double limitCmax;
+    private double limitCmmr;
+    private int noTV;
+    private boolean verbose;
+    private boolean veryVerbose;
+    private double x[];
+    private double w[];
+    private double r[];
+    private double u[];
+    private double v[];
+    private boolean loggActive;
+    private double sumxx;
+    private double sumww;
+    private double sumrr;
+    private double sumAllxxTab[];
+    private double sumAllwwTab[];
+    private double sumAllrrTab[];
+    private double snrTab[];
+    private double sumxxTab[];
+    private double sumwwTab[];
+    private double sumrrTab[];
+    private int nzc;
+    private int indexW[];
+    private double valueW[];
+}
