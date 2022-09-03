@@ -10,8 +10,6 @@
 
 package mpv2;
 
-// import mpv2.util.*;
-
 /**
  * This is a simple matrix class made by implementing AllMatrices as simple as possible. Only som
  * constructors, and get and set are added here.
@@ -137,13 +135,6 @@ public class SimpleMatrix extends AllMatrices
  * ------------------------ */
 
   /**
-   * Make a deep copy of a matrix
-   */
-  public SimpleMatrix copy() {
-    return new SimpleMatrix(this);
-  }
-
-  /**
    * Clone the Matrix object.
    */
   public Object clone() {
@@ -226,52 +217,6 @@ public class SimpleMatrix extends AllMatrices
     }
     int i = N * k;
     for (int n = 0; n < N; n++, i++) {x[n] += factor * Aarray[i];}
-  }
-
-  /**
-   * Copy a row of the matrix Legal range of the integer argument is <code>0 <= n < N</code>. If
-   * argument is out of range a length <code>K</code> array of zeros should be returned. <br> The
-   * corresponding Matlab expression would be: <code>r = A(n+1,:)</code>.
-   *
-   * @param n number of the row in the matrix <code>A</code>.
-   * @param r the given row of matrix <code>A</code>.
-   */
-  public void getRow(int n, double[] r) {
-    if (r.length != K) {
-      throw new IllegalArgumentException(
-          "getRow: argument r is not expected length K.");
-    }
-    for (int k = 0; k < K; k++) {r[k] = Aarray[N * k + n];}
-  }
-
-  /**
-   * Set a row of the matrix Legal range of the integer argument is <code>0 <= n < N</code>. If
-   * argument is out of range an IllegalArgumentException is thrown. <br> The corresponding Matlab
-   * expression would be: <code>A(n+1,:) = r</code>.
-   *
-   * @param n number of the row in the matrix <code>A</code>.
-   * @param r the given row of matrix <code>A</code>.
-   */
-  public void setRow(int n, double[] r) {
-    if (r.length != K) {
-      throw new IllegalArgumentException(
-          "setRow: argument r is not expected length K.");
-    }
-    for (int k = 0; k < K; k++) {Aarray[N * k + n] = r[k];}
-  }
-
-  /**
-   * Set all entries of to matrix to the supplied new values If argument is wrong length an
-   * IllegalArgumentException is thrown. <br>
-   *
-   * @param vals One-dimensional array of doubles, packed by columns (ala Fortran).
-   */
-  public void setAll(double[] vals) {
-    if (N * K != vals.length) {
-      throw new IllegalArgumentException
-          ("Array length must as total size of matrix (N*K).");
-    }
-    for (int i = 0; i < (N * K); i++) {Aarray[i] = vals[i];}
   }
 }
 

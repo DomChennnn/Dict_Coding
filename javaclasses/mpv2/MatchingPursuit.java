@@ -5,9 +5,6 @@
 
 package mpv2;
 
-// Referenced classes of package mpv2:
-//            AllMatrices, SymmetricMatrix
-
 public class MatchingPursuit {
 
   public MatchingPursuit(AllMatrices allmatrices) {

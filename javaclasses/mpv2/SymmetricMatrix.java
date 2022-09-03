@@ -217,65 +217,6 @@ public class SymmetricMatrix extends AllMatrices
   }
 
   /**
-   * Copy a row of the matrix into argument d
-   *
-   * @param n number of the row in the matrix
-   * @param d the given column of the matrix
-   */
-  public void getRow(int n, double[] d) {
-    // a row is the same as the corresponding column in a symmetric matrix
-    getColumn(n, d);
-  }
-
-  /**
-   * Set a row, and a column, of the matrix
-   *
-   * @param n number of the row in the matrix <code>A</code>.
-   * @param r the given row of matrix <code>A</code>.
-   */
-  public void setRow(int n, double[] r) {
-    // a row is the same as the corresponding column in a symmetric matrix
-    setColumn(n, r);
-  }
-
-/* ------------------------
-   Update methods, eq...
-   Most of these generally do not give a symmetric matrix as result.
-   For many methods only documentation is changed a little bit, and
-   then the same method in AllMatrices is used as is.
-   In setAlll(vals) a warning is printed if vals is not a symmetric matrix.
- * ------------------------ */
-
-  /**
-   * Set all entries of the matrix to the supplied new values. Note that even if vals contains all
-   * the N*N values of the symmetric matrix, only those in the lower left part is used, and thus the
-   * result is symmetric anyway. If argument is wrong length an IllegalArgumentException is thrown.
-   *
-   * @param vals One-dimensional array of doubles, packed by columns (ala Fortran).
-   * @throws IllegalArgumentException
-   */
-  public void setAll(double[] vals) {
-    if (N * K != vals.length) {
-      throw new IllegalArgumentException
-          ("Array length must as total size of matrix (N*K).");
-    }
-    double notSymmetric = 0.0;
-    int j = 0;
-    for (int k = 0; k < K; k++) {
-      for (int n = k; n < N; n++, j++) {
-        double temp = vals[k * N + n];
-        Aarray[j] = temp;
-        if (vals[n * N + k] != temp) {notSymmetric += Math.abs(vals[n * N + k] - temp);}
-      }
-    }
-    if (notSymmetric > (1e-10)) {
-      System.out.println("Info: the supplied values was not a symmetric matrix, "
-          + "deviation is " + notSymmetric);
-      System.out.println("Note that only lower left part was used.");
-    }
-  }
-
-  /**
    * Set inner-products of matrix B into this, i.e. A = B'*B,
    *
    * @param B A matrix of any kind, class is a subclass of AllMatrices

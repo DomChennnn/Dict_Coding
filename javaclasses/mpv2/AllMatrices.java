@@ -20,10 +20,6 @@
 
 package mpv2;
 
-// import java.io.BufferedReader;
-// import java.io.StreamTokenizer;
-// import mpv2.util.*;  // hypot is included in java.lang.Math (since ver. 1.5)
-
 /**
  * mpv2 = Matrix package version 2
  * <p>
@@ -160,8 +156,6 @@ package mpv2;
  * @version November 2008
  */
 
-//  ?????
-//  TODO: en burde nok unngtt bruk av spesielle klasser her (JamaMatrix) og heller
 //  satset p void metoder som setter resultatet i en AllMatrices object
 //  Et eksempel er laget for metoden plus.
 //  Kanskje heller resultat til A (this), A = B + C, A = A + B, o.s.v
@@ -242,42 +236,6 @@ public abstract class AllMatrices
     return K;
   }
 
-  // and same name as in Jama.Matrix
-
-  /**
-   * Get row dimension.
-   *
-   * @return N, the number of rows.
-   */
-  public int getRowDimension() {
-    return N;
-  }
-
-  /**
-   * Get column dimension.
-   *
-   * @return K, the number of columns.
-   */
-  public int getColumnDimension() {
-    return K;
-  }
-
-  /**
-   * Get a single element, i.e. the value of an entry of the matrix. If arguments are outside legal
-   * range a zero is returned without error or warning.
-   *
-   * @param n Row index for the returned entry value.
-   * @param k Column index for the returned entry value.
-   * @return The matrix element, A(n,k).
-   */
-  public double getValue(int n, int k) {
-    if ((n >= 0) & (n < N) & (k >= 0) & (k < K)) {
-      return get(n, k);
-    } else {
-      return 0.0;
-    }
-  }
-
   /**
    * Get a column of the matrix. If argument is out of range a length <code>N</code> array of zeros
    * should be returned.
@@ -311,165 +269,9 @@ public abstract class AllMatrices
     }
   }
 
-  /**
-   * Get a row of the matrix. Legal range of the integer argument is <code>0 <= n < N</code>. If
-   * argument is out of range a length <code>K</code> array of zeros should be returned.
-   *
-   * @param n number of the row in the matrix A.
-   * @return the row
-   */
-  public double[] getRow(int n) {
-    double[] x = new double[K];
-    getRow(n, x);
-    return x;
-  }
-
-  /**
-   * Get a row of the matrix into argument x. Legal range of the integer argument is <code>0 <= n <
-   * N</code>.
-   *
-   * @param n number of the row in the matrix.
-   * @param x is set to the given row of matrix.
-   * @throws IllegalArgumentException
-   */
-  public void getRow(int n, double[] x) {
-    if (x.length != K) {
-      throw new IllegalArgumentException(
-          "getRow: argument x is not expected length K.");
-    }
-    if ((n >= 0) & (n < N)) {
-      for (int k = 0; k < K; k++) {x[k] = get(n, k);}
-    } else {
-      for (int k = 0; k < K; k++) {x[k] = 0.0;}
-    }
-  }
-
-  /**
-   * Get all entries of the matrix, as a one-dimensional column-packed array.
-   *
-   * @return all entries in a one-dimensional array
-   */
-  public double[] getAll() {
-    double[] vals = new double[N * K];
-    getAll(vals);
-    return vals;
-  }
-
-  /**
-   * Get all entries of the matrix into argument vals in a column-packed way.
-   *
-   * @param vals an one-dimensional array where the values are copied into
-   * @throws IllegalArgumentException
-   */
-  public void getAll(double[] vals) {
-    if (vals.length != (N * K)) {
-      throw new IllegalArgumentException(
-          "getAll: argument vals is not expected length (N*K).");
-    }
-    //
-    double[] y = new double[N];
-    int i = 0;
-    for (int k = 0; k < K; k++) {
-      getColumn(k, y);
-      for (int n = 0; n < N; n++, i++) {
-        vals[i] = y[n];
-      }
-    }
-  }
-
-  /**
-   * Get a one-dimensional column packed copy of a submatrix.
-   *
-   * @param i0 Initial row index
-   * @param i1 Final row index
-   * @param j0 Initial column index
-   * @param j1 Final column index
-   * @return Submatrix elements packed in a one-dimensional array by columns.
-   */
-  public double[] getSubMatrix(int i0, int i1, int j0, int j1) {
-    double[] vals = new double[(i1 - i0 + 1) * (j1 - j0 + 1)];
-    int vi = 0;
-    for (int j = j0; j <= j1; j++) {
-      for (int i = i0; i <= i1; i++) {
-        vals[vi++] = getValue(i, j);  // returns 0.0 if out of range
-      }
-    }
-    return vals;
-  }
-
-  /**
-   * Get a one-dimensional column packed copy of a submatrix.
-   *
-   * @param r Array of row indices.
-   * @param c Array of column indices.
-   * @return Submatrix elements packed in a one-dimensional array by columns.
-   */
-  public double[] getSubMatrix(int[] r, int[] c) {
-    double[] vals = new double[r.length * c.length];
-    int vi = 0;
-    for (int j = 0; j < c.length; j++) {
-      for (int i = 0; i < r.length; i++) {
-        vals[vi++] = getValue(r[i], c[j]);  // returns 0.0 if out of range
-      }
-    }
-    return vals;
-  }
-
-  /**
-   * Get a one-dimensional column packed copy of a submatrix.
-   *
-   * @param i0 Initial row index
-   * @param i1 Final row index
-   * @param c  Array of column indices.
-   * @return Submatrix elements packed in a one-dimensional array by columns.
-   */
-  public double[] getSubMatrix(int i0, int i1, int[] c) {
-    double[] vals = new double[(i1 - i0 + 1) * c.length];
-    int vi = 0;
-    for (int j = 0; j < c.length; j++) {
-      for (int i = i0; i <= i1; i++) {
-        vals[vi++] = getValue(i, c[j]);  // returns 0.0 if out of range
-      }
-    }
-    return vals;
-  }
-
-  /**
-   * Get a one-dimensional column packed copy of a submatrix.
-   *
-   * @param r  Array of row indices.
-   * @param j0 Initial column index
-   * @param j1 Final column index
-   * @return Submatrix elements packed in a one-dimensional array by columns.
-   */
-  public double[] getSubMatrix(int[] r, int j0, int j1) {
-    double[] vals = new double[r.length * (j1 - j0 + 1)];
-    int vi = 0;
-    for (int j = j0; j <= j1; j++) {
-      for (int i = 0; i < r.length; i++) {
-        vals[vi++] = getValue(r[i], j);  // returns 0.0 if out of range
-      }
-    }
-    return vals;
-  }
-    
 /* ------------------------
    Access methods, set...
  * ------------------------ */
-
-  /**
-   * Set a single element, i.e. an entry (a value) in the matrix. We should have: <code>0 <= n <
-   * N</code> and <code>0 <= k < K</code>. If any argument is outside legal range nothing is done.
-   *
-   * @param n Row index for the entry value to be changed.
-   * @param k Column index for the entry value to be changed.
-   * @param s Value to be put into the given entry of the matrix.
-   */
-  public void setValue(int n, int k, double s) {
-    if ((n >= 0) & (n < N) & (k >= 0) & (k < K)) {
-      set(n, k, s);
-    }
-  }
 
   /**
    * Copy an array (y) into a column of the matrix. Legal range of the integer argument is <code>0
@@ -490,49 +292,6 @@ public abstract class AllMatrices
     }
   }
 
-  /**
-   * Copy an array (x) into a row of the matrix. Legal range of the integer argument is <code>0 <= n
-   * < N</code>.
-   *
-   * @param n number of the row in the matrix <code>A</code>.
-   * @param x the given row of matrix <code>A</code>.
-   * @throws IllegalArgumentException
-   */
-  public void setRow(int n, double[] x) {
-    if ((n < 0) || (n >= N)) {return;}
-    if (x.length != K) {
-      throw new IllegalArgumentException(
-          "setRow: argument x is not expected length K.");
-    }
-    for (int k = 0; k < K; k++) {
-      set(n, k, x[k]);
-    }
-  }
-
-  /**
-   * Set all entries of the matrix to the supplied new values. If argument is wrong length an
-   * IllegalArgumentException is thrown.
-   *
-   * @param vals One-dimensional array of doubles, packed by columns (ala Fortran).
-   * @throws IllegalArgumentException
-   */
-  public void setAll(double[] vals) {
-    if (N * K != vals.length) {
-      throw new IllegalArgumentException
-          ("Array length must as total size of matrix (N*K).");
-    }
-    double[] y = new double[N];
-    int i = 0;
-    for (int k = 0; k < K; k++) {
-      for (int n = 0; n < N; n++, i++) {
-        y[n] = vals[i];
-      }
-      setColumn(k, y);
-    }
-  }
-
-  // setSubMatrix()
-    
 /* ------------------------
    Methods where the matrix operates on an array, i.e. a (column) vector.
  * ------------------------ */
@@ -555,40 +314,6 @@ public abstract class AllMatrices
     double[] col = new double[N];
     getColumn(k, col);
     for (int n = 0; n < N; n++) {y[n] += s * col[n];}
-  }
-
-  /**
-   * Multiplies the matrix by an array (vector), return y = A*x.
-   *
-   * @param x the input array
-   * @return the results as an array of length N.
-   */
-  public double[] times(double[] x) {
-    double[] y = new double[N];
-    times(x, y);
-    return y;
-  }
-
-  /**
-   * Multiplies the matrix by an array (vector), set y = A*x.
-   *
-   * @param x the input array
-   * @param y the results as an array of length N.
-   * @throws IllegalArgumentException
-   */
-  public void times(double[] x, double[] y) {
-    if (x.length != K) {
-      throw new IllegalArgumentException(
-          "times: argument x is not expected length K.");
-    }
-    if (y.length != N) {
-      throw new IllegalArgumentException(
-          "times: argument y is not expected length N.");
-    }
-    for (int n = 0; n < N; n++) {y[n] = 0.0;}
-    for (int k = 0; k < K; k++) {
-      if (x[k] != 0.0) {this.addColumn(k, x[k], y);}
-    }
   }
 
   /**
@@ -635,19 +360,5 @@ public abstract class AllMatrices
     double[] col2 = getColumn(k2);
     for (int n = 0; n < N; n++) {ip += col1[n] * col2[n];}
     return ip;
-  }
-    
-/* ------------------------
-   (Package) Methods
- * ------------------------ */
-
-  /**
-   * Check if size(A) == size(B)
-   **/
-
-  void checkMatrixDimensions(AllMatrices B) {
-    if (B.getN() != this.getN() || B.getK() != this.getK()) {
-      throw new IllegalArgumentException("Matrix dimensions must agree.");
-    }
   }
 }
