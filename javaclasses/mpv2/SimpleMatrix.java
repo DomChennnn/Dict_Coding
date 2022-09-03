@@ -36,7 +36,7 @@ public class SimpleMatrix extends AllMatrices
    *
    * @serial internal array storage.
    */
-  private final double[] Aarray;
+  private double[] Aarray;
 
 /* ------------------------
    Constructors
@@ -101,7 +101,7 @@ public class SimpleMatrix extends AllMatrices
    * @throws IllegalArgumentException Array length must be a multiple of m.
    */
 
-  public SimpleMatrix(double[] vals, int n) {
+  public SimpleMatrix(double vals[], int n) {
     N = n;
     K = (n != 0 ? vals.length / n : 0);
     if (N * K != vals.length) {
@@ -283,45 +283,6 @@ public class SimpleMatrix extends AllMatrices
     double f = 0;
     for (int i = 0; i < (N * K); i++) {f += Aarray[i];}
     return f;
-  }
-
-  //  some new methods added, many more could be added
-
-  /**
-   * Scale the columns of this, A *= D  which is  A = A * D.
-   *
-   * @param D Diagonal matrix of size K-by-K, class DiagonalMatrix
-   * @throws IllegalArgumentException
-   */
-  public void timeseqScaleColumns(DiagonalMatrix D) {
-    if (D.getN() != K) {
-      throw new IllegalArgumentException("Matrix dimensions must agree.");
-    }
-    int i = 0;
-    for (int k = 0; k < K; k++) {
-      double d = D.get(k, k);
-      for (int n = 0; n < N; n++, i++) {
-        Aarray[i] *= d;
-      }
-    }
-  }
-
-  /**
-   * Scale the rows of this, A *= D  which is  A = D * A.
-   *
-   * @param D Diagonal matrix of size N-by-N, class DiagonalMatrix
-   * @throws IllegalArgumentException
-   */
-  public void timeseqScaleRows(DiagonalMatrix D) {
-    if (D.getK() != N) {
-      throw new IllegalArgumentException("Matrix dimensions must agree.");
-    }
-    for (int n = 0; n < N; n++) {
-      double d = D.get(n, n);
-      for (int k = 0; k < K; k++) {
-        Aarray[N * k + n] *= d;
-      }
-    }
   }
 }
 
