@@ -175,9 +175,7 @@ def sparseapprox(
         tae = tre * norm2X
 
     jvmPath = jpype.getDefaultJVMPath()  # the path of jvm.dll
-    classpath = os.path.join(
-        PROJECT_ROOT, "javaclasses"
-    )  # the path of PasswordCipher.class
+    classpath = os.path.join(PROJECT_ROOT, "javaclasses")  # the path of PasswordCipher.class
     jvmArg = "-Djava.class.path=" + classpath
     if not jpype.isJVMStarted():  # test whether the JVM is started
         jpype.startJVM(jvmPath, jvmArg)  # start JVM
@@ -231,9 +229,7 @@ def sparseapprox(
             Sp1[Sp1 > N] = N
             Sm1 = S - 1  # selected number of non-zeros minus one
             Sm1[Sm1 < 0] = 0
-            SEp1 = np.zeros(
-                (L, 1), np.float32
-            )  # initializing corresponding squared error
+            SEp1 = np.zeros((L, 1), np.float32)  # initializing corresponding squared error
             SEm1 = np.zeros((L, 1), np.float32)
             for j in range(L):
                 x = X[:, j]
@@ -249,23 +245,15 @@ def sparseapprox(
                     w = jMP.vsORMP(x, Sm1[j], relLim)
                 r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
                 SEm1[j] = np.dot(r.T, r)
-            SEdec = (
-                SE.reshape(-1, 1) - SEp1
-            )  # the decrease in error by selectiong one more
-            SEinc = SEm1 - SE.reshape(
-                -1, 1
-            )  # the increase in error by selectiong one less
+            SEdec = SE.reshape(-1, 1) - SEp1  # the decrease in error by selectiong one more
+            SEinc = SEm1 - SE.reshape(-1, 1)  # the increase in error by selectiong one less
             SEinc[S == 0] = np.inf  # not possible to select fewer than zero
             addedS = 0
             removedS = 0
             addedSE = np.float32(0)
             removedSE = 0
-            valinc, jinc = np.min(SEinc), np.argmin(
-                SEinc
-            )  # min increase in SE by removing one atom
-            valdec, jdec = np.max(SEdec), np.argmax(
-                SEdec
-            )  # max reduction in SE by adding one atom
+            valinc, jinc = np.min(SEinc), np.argmin(SEinc)  # min increase in SE by removing one atom
+            valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # max reduction in SE by adding one atom
 
             if targetSSE > 0:
                 if SSEinit > targetSSE:  # part 2
@@ -329,7 +317,7 @@ def sparseapprox(
 
             else:
                 targetSSE = SSEinit
-            #
+
             # part 4
             while (valinc < valdec) and (jinc != jdec):
                 j = jdec
