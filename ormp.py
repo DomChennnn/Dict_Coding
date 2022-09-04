@@ -1,4 +1,7 @@
 import os
+
+import numpy
+
 from utils import PROJECT_ROOT
 
 
@@ -24,6 +27,8 @@ class JavaORMP:
             jDD.eqInnerProductMatrix(jD)
             self.jMP = MatchingPursuit(jD, jDD)
 
+        print("java ormp", jD.getN(), jDD.getN())
+
     def apply(self, ad, i, d1):
         return self.jMP.vsORMP(ad, i, d1)
 
@@ -38,12 +43,15 @@ class CppORMP:
         else:
             jDD = mpv2.SymmetricMatrix(K, K)
             jDD.eqInnerProductMatrix(jD)
+
             self.jMP = mpv2.MatchingPursuit(jD, jDD)
+
+        print("cpp ormp", jD.getN(), jDD.getN())
 
     def apply(self, ad, i, d1):
         import mpv2
 
-        return self.jMP.vsORMP(mpv2.DoubleVectors.from_np_array(ad), i, d1).to_np_array()
+        return numpy.array(self.jMP.vsORMP(mpv2.DoubleVector.from_np_array(ad), int(i), float(d1)))
 
 
 def get_provider():
