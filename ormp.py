@@ -44,3 +44,14 @@ class CppORMP:
         import mpv2
 
         return self.jMP.vsORMP(mpv2.DoubleVectors.from_np_array(ad), i, d1).to_np_array()
+
+
+def get_provider():
+    try:
+        import mpv2
+
+        return CppORMP
+    except:
+        pass
+
+    return JavaORMP
