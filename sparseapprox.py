@@ -2,6 +2,7 @@ import os
 import numpy as np
 import jpype
 from utils import PROJECT_ROOT
+from ormp import get_provider
 
 
 def sparseapprox(
@@ -174,25 +175,7 @@ def sparseapprox(
     else:  # 'tre' was given a default value
         tae = tre * norm2X
 
-    jvmPath = jpype.getDefaultJVMPath()  # the path of jvm.dll
-    classpath = os.path.join(PROJECT_ROOT, "javaclasses")  # the path of PasswordCipher.class
-    jvmArg = "-Djava.class.path=" + classpath
-    if not jpype.isJVMStarted():  # test whether the JVM is started
-        jpype.startJVM(jvmPath, jvmArg)  # start JVM
-
-    SimpleMatrix = jpype.JClass("mpv2.SimpleMatrix")  # create the Java class
-    MatchingPursuit = jpype.JClass("mpv2.MatchingPursuit")
-    SymmetricMatrix = jpype.JClass("mpv2.SymmetricMatrix")
-
-    if met[0 : min(len(met), 4)] == "java":
-        jD = SimpleMatrix(D)
-        if L == 1:
-            jMP = MatchingPursuit(jD)
-        else:
-            jDD = SymmetricMatrix(K, K)
-            jDD.eqInnerProductMatrix(jD)
-            jMP = MatchingPursuit(jD, jDD)
-
+    ormp_calc = get_provider()(D, K, L)
     if (met == "javaORMP") or (met == "javaOrderRecursiveMatchingPursuit"):
         #
         # This could be as simple as javaOMP, but since globalReDist was
@@ -209,7 +192,7 @@ def sparseapprox(
         # below is the javaORMP lines
         for j in range(L):
             if (tnz[0, j] > 0) and (tre[j] < 1):
-                W[:, j] = jMP.vsORMP(X[:, j], np.int32(tnz[0, j]), tre[j])
+                W[:, j] = ormp_calc.apply(X[:, j], np.int32(tnz[0, j]), tre[j])
         # below is the globalReDist lines
         # ******* START Global distribution of non-zeros.*****
         # The structure is:
@@ -236,13 +219,13 @@ def sparseapprox(
                 if Sp1[j] == S[j]:  # == N
                     w = W[:, j]
                 else:
-                    w = jMP.vsORMP(x, Sp1[j], relLim)
+                    w = ormp_calc.apply(x, Sp1[j], relLim)
                 r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
                 SEp1[j] = np.dot(r.T, r)
                 if Sm1[j] == 0:
                     w = np.zeros((K, 1))
                 else:
-                    w = jMP.vsORMP(x, Sm1[j], relLim)
+                    w = ormp_calc.apply(x, Sm1[j], relLim)
                 r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
                 SEm1[j] = np.dot(r.T, r)
             SEdec = SE.reshape(-1, 1) - SEp1  # the decrease in error by selectiong one more
@@ -266,13 +249,13 @@ def sparseapprox(
                         Sm1[j], S[j], Sp1[j] = S[j], Sp1[j], min(Sp1[j] + 1, N)
                         SEm1[j], SE[j] = SE[j], SEp1[j]  # and SEp1(j)=SEp1(j)
                         if Sp1[j] > S[j]:  # the normal case, find new SEp1(j)
-                            w = jMP.vsORMP(X[:, j], Sp1[j], relLim)
+                            w = ormp_calc.apply(X[:, j], Sp1[j], relLim)
                             r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
                             SEp1[j] = np.dot(r.T, r)
                         SEinc[j] = SEdec[j]  # SE cost by removing this again
                         SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
                         #
-                        W[:, j] = jMP.vsORMP(X[:, j], S[j], relLim)
+                        W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
                         valdec, jdec = np.max(SEdec), np.argmax(SEdec)
 
                     valinc, jinc = np.min(SEinc), np.argmax(SEdec)
@@ -286,7 +269,7 @@ def sparseapprox(
                         Sm1[j], S[j], Sp1[j] = max(Sm1[j] - 1, 0), Sm1[j], S[j]
                         SE[j], SEp1[j] = SEm1[j], SE[j]  # and SEm1(j)=SEm1(j)
                         if Sm1[j] > 0:
-                            w = jMP.vsORMP((X[:, j]), Sm1[j], relLim)
+                            w = ormp_calc.apply((X[:, j]), Sm1[j], relLim)
                             r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
                         else:
                             r = X[:, j]
@@ -295,7 +278,7 @@ def sparseapprox(
                         #
                         SEdec[j] = SEinc[j]  # SE gain by adding this atom again
                         if S[j] > 0:  # SE cost by removing another atom
-                            W[:, j] = jMP.vsORMP(X[:, j], S[j], relLim)
+                            W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
                             SEinc[j] = SEm1[j] - SE[j]
                         else:
                             W[:, j] = 0
@@ -328,13 +311,13 @@ def sparseapprox(
                 Sm1[j], S[j], Sp1[j] = S[j], Sp1[j], min(Sp1[j] + 1, N)
                 SEm1[j], SE[j] = SE[j], SEp1[j]  # and SEp1(j)=SEp1(j)
                 if Sp1[j] > S[j]:  # the normal case, find new SEp1(j)
-                    w = jMP.vsORMP(X[:, j], Sp1[j], relLim)
+                    w = ormp_calc.apply(X[:, j], Sp1[j], relLim)
                     r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
                     SEp1[j] = np.dot(r.T, r)
 
                 SEinc[j] = SEdec[j]  # SE cost by removing this again
                 SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
-                W[:, j] = jMP.vsORMP(X[:, j], S[j], relLim)
+                W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
                 valinc, jinc = np.min(SEinc), np.argmin(SEinc)
                 #
                 while (SSE + valinc) < targetSSE:
@@ -346,7 +329,7 @@ def sparseapprox(
                     Sm1[j], S[j], Sp1[j] = max(Sm1[j] - 1, 0), Sm1[j], S[j]
                     SE[j], SEp1[j] = SEm1[j], SE[j]  # and SEm1(j)=SEm1(j)
                     if Sm1[j] > 0:
-                        w = jMP.vsORMP(X[:, j], Sm1[j], relLim)
+                        w = ormp_calc.apply(X[:, j], Sm1[j], relLim)
                         r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
                     else:
                         r = X[:, j]
@@ -354,7 +337,7 @@ def sparseapprox(
                     #
                     SEdec[j] = SEinc[j]  # SE gain by adding this atom again
                     if S[j] > 0:  # SE cost by removing another atom
-                        W[:, j] = jMP.vsORMP(X[:, j], S[j], relLim)
+                        W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
                         SEinc[j] = SEm1[j] - SE[j]
                     else:
                         W[:, j] = 0
