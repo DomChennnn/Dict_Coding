@@ -5,6 +5,7 @@ from utils import test_Dict_par
 from imageapprox import imageapprox
 
 
+# TODO 取个更好的名字
 def test_Dict(img, Ds):
     img = np.array(img, dtype=np.double)
     img_hgt, img_wdt = img.shape
@@ -19,6 +20,7 @@ def test_Dict(img, Ds):
         ompMethod="mexOMP",
         verbose=0,
     )
+
     # test_Dict_par is a dict in python
     Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(
         im_128, par

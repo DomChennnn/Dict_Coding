@@ -105,9 +105,7 @@ def img_encode(path_in, path_out, Ds, mode=0):
         info2 = [deldc_R, deldc_G, deldc_B]
         saved = open(path_out, mode="wb")
         write_uints(saved, (info0[0], info0[1]))
-        write_uints(
-            saved, (info1[0], info1[1], info1[2], info1[3], info1[4], info1[5])
-        )
+        write_uints(saved, (info1[0], info1[1], info1[2], info1[3], info1[4], info1[5]))
         write_uints(saved, (info2[0], info2[1], info2[2]))
         saved.write(mybits)
         saved.close()

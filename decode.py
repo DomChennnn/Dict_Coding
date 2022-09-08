@@ -9,6 +9,7 @@ from mypred import mypred
 from utils import read_uints
 
 
+# TODO 是不是可以进一步抽象出 encode_channel 方法？
 def img_decode(path_in, path_out, Ds, mode=0):
     """
     img_decode: decode bin into img
@@ -61,7 +62,9 @@ def img_decode(path_in, path_out, Ds, mode=0):
             )
             Xa = np.dot(np.float64(Ds.D), Qw)
 
-            Ar = mycol2im(Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8])
+            Ar = mycol2im(
+                Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8]
+            )
             Ar = Ar[0:h, 0:w]
             if idx_channel == 0:
                 Ar_R = Ar
@@ -136,7 +139,9 @@ def img_decode(path_in, path_out, Ds, mode=0):
             )
             Xa = np.dot(np.float64(Ds.D), Qw)
 
-            Ar = mycol2im(Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8])
+            Ar = mycol2im(
+                Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8]
+            )
             Ar = Ar[0:h, 0:w]
             if idx_channel == 0:
                 Ar_R = Ar

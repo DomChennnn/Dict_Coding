@@ -10,7 +10,9 @@ class JavaORMP:
         import jpype
 
         jvmPath = jpype.getDefaultJVMPath()  # the path of jvm.dll
-        classpath = os.path.join(PROJECT_ROOT, "javaclasses")  # the path of PasswordCipher.class
+        classpath = os.path.join(
+            PROJECT_ROOT, "javaclasses"
+        )  # the path of PasswordCipher.class
         jvmArg = "-Djava.class.path=" + classpath
         if not jpype.isJVMStarted():  # test whether the JVM is started
             jpype.startJVM(jvmPath, jvmArg)  # start JVM
@@ -51,7 +53,9 @@ class CppORMP:
     def apply(self, ad, i, d1):
         import mpv2
 
-        return numpy.array(self.jMP.vsORMP(mpv2.DoubleVector.from_np_array(ad), int(i), float(d1)))
+        return numpy.array(
+            self.jMP.vsORMP(mpv2.DoubleVector.from_np_array(ad), int(i), float(d1))
+        )
 
 
 def get_provider():

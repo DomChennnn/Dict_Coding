@@ -87,7 +87,7 @@ def imageapprox(A, par):
     deldc = 0
     thrdc = 0
 
-    # get the options
+    # get the options TODO 删除不太重要的注释
     dele = par.dele
     Ds = par.dictionary
     eb = par.estimateBits
@@ -264,7 +264,7 @@ def imageapprox(A, par):
     if len(eb) > 1:
         # estimate bits
         if Ds != None:  # a dictionary was used
-            xCw = myreshape(Zw, method=2, verbose=0)
+            xCw = myreshape(Zw, method=2)
             xCdc = mypred(
                 Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"),
                 nofS=3,

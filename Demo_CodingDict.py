@@ -50,7 +50,7 @@ for ind_img in range(NumberImages):
     img_decode(path_bin, path_rec, Ds, 0)
     decode_end_time = time.time()
 
-    print('idx =', ind_img)
+    print("idx =", ind_img)
     print((encode_end_time - encode_start_time) * 1000)
     print((decode_end_time - encode_end_time) * 1000)
     bmpsize = os.path.getsize(path_img)

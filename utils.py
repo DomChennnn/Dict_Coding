@@ -3,7 +3,7 @@ import struct
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# two python dict, just like C++ class
+
 class Dictionaries:
     def __init__(self, D, K, N, L, transform):
         self.D = D
@@ -13,6 +13,7 @@ class Dictionaries:
         self.transform = transform
 
 
+# TODO 取个更好的名称
 class test_Dict_par:
     def __init__(
         self, dictionary, targetPSNR, dele, qLimit, estimateBits, ompMethod, verbose

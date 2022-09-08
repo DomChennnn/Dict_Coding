@@ -1,0 +1,11 @@
+1. 关于项目命名
+
+获鼎给取了个项目名: juicer，寓意着压榨硬件的极限性能。
+
+Python代码项目名称建议改为 py_juicer，这样以来mylwt2类似的名称可以改为juicer_lwt2，代码看起来会更专业。
+
+其他对应项目名称分别为：
+C语言版本编码器 -> juicer
+STM32版本解码器 -> turbo-juicer
+
+2. 建议使用 pylint 工具检查代码并修复 warning
