@@ -175,6 +175,7 @@ def imageapprox(A, par):
 
             W = sparseapprox(X, Ds.D, "javaORMP", targetNonZeros=N / 2, tSSE=tSSE)
         elif tsf < 1:
+            # TODO 这个分支没走到，可以删掉？
             tnnz = np.floor(Ma * Na * tsf) - L
             W = sparseapprox(X, Ds.D, "GMP", targetNonZeros=tnnz)
             W = sparseapprox(X, Ds.D, "javaORMP", targetNonZeros=sum(W != 0), globalRD=1)
