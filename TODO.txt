@@ -9,3 +9,7 @@ C语言版本编码器 -> juicer
 STM32版本解码器 -> turbo-juicer
 
 2. 建议使用 pylint 工具检查代码并修复 warning
+
+3. 确认可以使用float32而不是float64
+
+4. 优化内存使用
