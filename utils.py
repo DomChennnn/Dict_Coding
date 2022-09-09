@@ -1,5 +1,6 @@
 import os
 import struct
+from array import array
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -15,9 +16,7 @@ class Dictionaries:
 
 # TODO 取个更好的名称
 class test_Dict_par:
-    def __init__(
-        self, dictionary, targetPSNR, dele, qLimit, estimateBits, ompMethod, verbose
-    ):
+    def __init__(self, dictionary, targetPSNR, dele, qLimit, estimateBits, ompMethod, verbose):
         self.dictionary = dictionary
         self.targetPSNR = targetPSNR
         self.dele = dele
@@ -70,3 +69,12 @@ def write_body(fd, shape, out_strings):
     for s in out_strings:
         bytes_cnt += write_bytes(fd, s)
     return bytes_cnt
+
+
+def dumps_np_array_to_file(np_array, filename, type_="f"):
+    if len(np_array.shape) not in (1, 2):
+        raise ValueError()
+
+    np_array = np_array.reshape(-1)
+    with open(filename, "wb") as f:
+        array(type_, np_array.tolist()).tofile(f)

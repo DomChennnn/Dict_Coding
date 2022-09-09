@@ -5,7 +5,7 @@ import math
 import time
 import os
 
-from utils import Dictionaries, PROJECT_ROOT
+from utils import Dictionaries, PROJECT_ROOT, dumps_np_array_to_file
 from encode import img_encode
 from decode import img_decode
 
