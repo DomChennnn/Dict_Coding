@@ -72,6 +72,8 @@ def write_body(fd, shape, out_strings):
 
 
 def dumps_np_array_to_file(np_array, filename, type_="f"):
+    """we can load later by gsl_matrix_float_fread"""
+
     if len(np_array.shape) not in (1, 2):
         raise ValueError()
 
