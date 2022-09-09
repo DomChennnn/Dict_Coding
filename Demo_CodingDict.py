@@ -22,15 +22,11 @@ def compute_psnr(img1, img2):
 foldername = "GenerallImages"
 blk_size = 8
 
-dir_in = os.path.join(
-    PROJECT_ROOT, "Images", foldername, "Test2", "bmp_test", "staticpics"
-)  # Image dir path
+dir_in = os.path.join(PROJECT_ROOT, "Images", foldername, "Test2", "bmp_test", "staticpics")  # Image dir path
 dir_bin = os.path.join(PROJECT_ROOT, "bins")  # bin dir path
 dir_rec = os.path.join(PROJECT_ROOT, "rec")  # rec dir path
 
-data = scio.loadmat(
-    os.path.join(PROJECT_ROOT, "Dictionary", "Dict_RLS_" + foldername + ".mat")
-)  # load Dictionary path
+data = scio.loadmat(os.path.join(PROJECT_ROOT, "Dictionary", "Dict_RLS_" + foldername + ".mat"))  # load Dictionary path
 D = data["dlsRLS"][0, 0][0]  # Dictionary
 
 N, K = D.shape

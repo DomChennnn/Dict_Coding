@@ -4,9 +4,7 @@ import primefac
 from myilwt2 import myilwt2
 
 
-def mycol2im(
-    X, imsize=None, transform=None, size=None, neighborhood=None, increment=None
-):
+def mycol2im(X, imsize=None, transform=None, size=None, neighborhood=None, increment=None):
     """
     mycol2im     Rearrange matrix columns into blocks.
     The 'inverse' is mycol2im.m
@@ -64,9 +62,7 @@ def mycol2im(
 
     if neighborhood != None:
         if len(neighborhood) <= 2:
-            nei = np.ones(
-                ((neighborhood[0]).astype(int), (neighborhood[1]).astype(int))
-            )
+            nei = np.ones(((neighborhood[0]).astype(int), (neighborhood[1]).astype(int)))
             Mn, Nn = nei.shape
         elif len(neighborhood > 2):
             nei = neighborhood
@@ -103,12 +99,7 @@ def mycol2im(
         Ms = Ms - np.mod(Ms, 2)
         Ns = Ns - np.mod(Ns, 2)
 
-    if (
-        (not tr == None)
-        and (not tr == "lot")
-        and (not tr == "elt")
-        and (not tr == "dct")
-    ):
+    if (not tr == None) and (not tr == "lot") and (not tr == "elt") and (not tr == "dct"):
         Ms = max(2, np.power(2, (np.floor(np.log2(Ms))).astype(int)))
         Ns = Ms
 

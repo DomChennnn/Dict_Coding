@@ -50,21 +50,13 @@ def img_decode(path_in, path_out, Ds, mode=0):
 
             Zdc_r = Zdc_r.T.reshape(1, -1)
 
-            Qdc = uniquant(
-                Zdc_r, deldc[idx_channel], thrdc[idx_channel]
-            )  # inverse quantizing
-            Qw = uniquant(
-                Zw_r, dele[idx_channel], thr[idx_channel]
-            )  # inverse quantizing
+            Qdc = uniquant(Zdc_r, deldc[idx_channel], thrdc[idx_channel])  # inverse quantizing
+            Qw = uniquant(Zw_r, dele[idx_channel], thr[idx_channel])  # inverse quantizing
 
-            Xr = np.concatenate(
-                (Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0
-            )
+            Xr = np.concatenate((Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0)
             Xa = np.dot(np.float64(Ds.D), Qw)
 
-            Ar = mycol2im(
-                Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8]
-            )
+            Ar = mycol2im(Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8])
             Ar = Ar[0:h, 0:w]
             if idx_channel == 0:
                 Ar_R = Ar
@@ -127,21 +119,13 @@ def img_decode(path_in, path_out, Ds, mode=0):
 
             Zdc_r = (Zdc_r.T).reshape(1, -1)
 
-            Qdc = uniquant(
-                Zdc_r, deldc[idx_channel], thrdc[idx_channel]
-            )  # inverse quantizing
-            Qw = uniquant(
-                Zw_r, dele[idx_channel], thr[idx_channel]
-            )  # inverse quantizing
+            Qdc = uniquant(Zdc_r, deldc[idx_channel], thrdc[idx_channel])  # inverse quantizing
+            Qw = uniquant(Zw_r, dele[idx_channel], thr[idx_channel])  # inverse quantizing
 
-            Xr = np.concatenate(
-                (Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0
-            )
+            Xr = np.concatenate((Qdc, np.zeros((Ds.N - 1, int(ad_h * ad_w // 64)))), axis=0)
             Xa = np.dot(np.float64(Ds.D), Qw)
 
-            Ar = mycol2im(
-                Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8]
-            )
+            Ar = mycol2im(Xr + Xa, transform=Ds.transform, imsize=[ad_h, ad_w], size=[8, 8])
             Ar = Ar[0:h, 0:w]
             if idx_channel == 0:
                 Ar_R = Ar

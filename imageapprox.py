@@ -120,12 +120,7 @@ def imageapprox(A, par):
         Ms = Ms - np.mod(Ms, 2)
         Ns = Ns - np.mod(Ns, 2)
 
-    if (
-        (not tr == None)
-        and (not tr == "lot")
-        and (not tr == "elt")
-        and (not tr == "dct")
-    ):
+    if (not tr == None) and (not tr == "lot") and (not tr == "elt") and (not tr == "dct"):
         Ms = max(2, np.power(2, (np.floor(np.log2(Ms))).astype(int)))
         Ns = Ms
 
@@ -178,23 +173,11 @@ def imageapprox(A, par):
         if tpsnr > 0:
             tSSE = ((Ma * Na) * peak * peak) * np.power(10, (-tpsnr / 10))
 
-            W = sparseapprox(
-                X,
-                Ds.D,
-                "javaORMP",
-                targetNonZeros=N / 2,
-                tSSE=tSSE,
-            )
+            W = sparseapprox(X, Ds.D, "javaORMP", targetNonZeros=N / 2, tSSE=tSSE)
         elif tsf < 1:
             tnnz = np.floor(Ma * Na * tsf) - L
             W = sparseapprox(X, Ds.D, "GMP", targetNonZeros=tnnz)
-            W = sparseapprox(
-                X,
-                Ds.D,
-                "javaORMP",
-                targetNonZeros=sum(W != 0),
-                globalRD=1,
-            )
+            W = sparseapprox(X, Ds.D, "javaORMP", targetNonZeros=sum(W != 0), globalRD=1)
             W = csr_matrix(W)
         else:
             print("imageapprox do not call sparseapprox (use W = D\X;).")
@@ -204,9 +187,7 @@ def imageapprox(A, par):
         if imageadjust:
             Ar = Ar[0:Ma, 0:Na]
         R = A - Ar
-        PSNRbq = 10 * np.log10(
-            (((Ma * Na) * peak * peak) / sum(sum(R * R)))
-        )  # sparse rep
+        PSNRbq = 10 * np.log10((((Ma * Na) * peak * peak) / sum(sum(R * R))))  # sparse rep
 
     ## Quantizing and find restored image
     adaptdelta = False
@@ -238,9 +219,7 @@ def imageapprox(A, par):
         if imageadjust:
             Ar = Ar[0:Ma, 0:Na]
         R = A - Ar
-        PSNRq = 10 * np.log10(
-            (((Ma * Na) * peak * peak) / sum(sum(R * R)))
-        )  # after quant.
+        PSNRq = 10 * np.log10((((Ma * Na) * peak * peak) / sum(sum(R * R))))  # after quant.
 
         if (not adaptdelta) or PSNRq > 30:
             break
