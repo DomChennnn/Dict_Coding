@@ -19,15 +19,9 @@ def img_encode(path_in, path_out, Ds, mode=0):
     h, w = img.shape[0], img.shape[1]
     compress_level = 9
 
-    _, _, res_R, xc_R, dele_R, deldc_R, thr_R, thrdc_R, _, _ = test_Dict(
-        img[:, :, 0], Ds
-    )
-    _, _, res_G, xc_G, dele_G, deldc_G, thr_G, thrdc_G, _, _ = test_Dict(
-        img[:, :, 1], Ds
-    )
-    _, _, res_B, xc_B, dele_B, deldc_B, thr_B, thrdc_B, _, _ = test_Dict(
-        img[:, :, 2], Ds
-    )
+    _, _, res_R, xc_R, dele_R, deldc_R, thr_R, thrdc_R, _, _ = test_Dict(img[:, :, 0], Ds)
+    _, _, res_G, xc_G, dele_G, deldc_G, thr_G, thrdc_G, _, _ = test_Dict(img[:, :, 1], Ds)
+    _, _, res_B, xc_B, dele_B, deldc_B, thr_B, thrdc_B, _, _ = test_Dict(img[:, :, 2], Ds)
 
     for i in range(len(xc_R)):
         xc_R[i] = list(xc_R[i])
@@ -85,14 +79,7 @@ def img_encode(path_in, path_out, Ds, mode=0):
         # info0: image height and image width
         # info1: len of each dictionary encoded bits and len of each res encoded bits
         # info2: some information for uniquant and iuniquant
-        mybits = (
-            xc_encoded_R
-            + xc_encoded_G
-            + xc_encoded_B
-            + res_encoded_R
-            + res_encoded_G
-            + res_encoded_B
-        )
+        mybits = xc_encoded_R + xc_encoded_G + xc_encoded_B + res_encoded_R + res_encoded_G + res_encoded_B
         info0 = [h, w]
         info1 = [
             len(xc_encoded_R),
