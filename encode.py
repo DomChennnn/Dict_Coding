@@ -19,9 +19,9 @@ def img_encode(path_in, path_out, Ds, mode=0):
     h, w = img.shape[0], img.shape[1]
     compress_level = 9
 
-    _, _, res_R, xc_R, dele_R, deldc_R, thr_R, thrdc_R, _, _ = test_Dict(img[:, :, 0], Ds)
-    _, _, res_G, xc_G, dele_G, deldc_G, thr_G, thrdc_G, _, _ = test_Dict(img[:, :, 1], Ds)
-    _, _, res_B, xc_B, dele_B, deldc_B, thr_B, thrdc_B, _, _ = test_Dict(img[:, :, 2], Ds)
+    _, _, res_R, xc_R, _, deldc_R, _, _, _, _ = test_Dict(img[:, :, 0], Ds)
+    _, _, res_G, xc_G, _, deldc_G, _, _, _, _ = test_Dict(img[:, :, 1], Ds)
+    _, _, res_B, xc_B, _, deldc_B, _, _, _, _ = test_Dict(img[:, :, 2], Ds)
 
     for i in range(len(xc_R)):
         xc_R[i] = list(xc_R[i])
