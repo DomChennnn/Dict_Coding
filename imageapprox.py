@@ -246,12 +246,6 @@ def imageapprox(A, par):
         if Ds != None:  # a dictionary was used
             xCw = myreshape(Zw, method=2)
             xCdc = mypred(Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"), nofS=3, verbose=0)
-            xC = []
-            for i_len in range(len(xCw) + len(xCdc)):
-                xC.append([])
+            xC = xCw + xCdc
 
-            for i in range(len(xCw)):
-                xC[i] = xCw[i]
-            for j in range(len(xCdc)):
-                xC[i + j + 1] = xCdc[j]
     return Ar, PSNRq, xC, dele, deldc, thr, thrdc
