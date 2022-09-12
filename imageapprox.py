@@ -245,11 +245,7 @@ def imageapprox(A, par):
         # estimate bits
         if Ds != None:  # a dictionary was used
             xCw = myreshape(Zw, method=2)
-            xCdc = mypred(
-                Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"),
-                nofS=3,
-                verbose=0,
-            )
+            xCdc = mypred(Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"), nofS=3, verbose=0)
             xC = []
             for i_len in range(len(xCw) + len(xCdc)):
                 xC.append([])
