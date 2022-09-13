@@ -174,8 +174,8 @@ def sparseapprox(
     else:  # 'tre' was given a default value
         tae = tre * norm2X  # TODO 变量未使用，使用pylint工具检查一下其他类似问题
 
-    ormp_calc = get_provider()(D, K, L)
     if (met == "javaORMP") or (met == "javaOrderRecursiveMatchingPursuit"):
+        ormp_calc = get_provider()(D, K, L)
         #
         # This could be as simple as javaOMP, but since globalReDist was
         # reintroduced it is now quite complicated here.
