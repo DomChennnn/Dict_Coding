@@ -176,8 +176,6 @@ def sparseapprox(
     if met not in ("javaORMP", "javaOrderRecursiveMatchingPursuit"):
         return W
 
-    ormp_calc = get_provider()(D, K, L)
-    #
     # This could be as simple as javaOMP, but since globalReDist was
     # reintroduced it is now quite complicated here.
     if targetSSE > 0:
@@ -189,10 +187,12 @@ def sparseapprox(
         tre = np.sqrt(targetSSE / L) / norm2X
         globalReDist = 2
 
+    ormp_calc = get_provider()(D, K, L)
     # below is the javaORMP lines
     for j in range(L):
         if (tnz[0, j] > 0) and (tre[j] < 1):
             W[:, j] = ormp_calc.apply(X[:, j], np.int32(tnz[0, j]), tre[j])
+
     # below is the globalReDist lines
     # ******* START Global distribution of non-zeros.*****
     # The structure is:
