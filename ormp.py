@@ -23,7 +23,7 @@ class JavaORMP:
         if L == 1:
             self.jMP = MatchingPursuit(jD)
         else:
-            jDD = SymmetricMatrix(K, K)
+            jDD = SymmetricMatrix(K)
             jDD.eqInnerProductMatrix(jD)
             self.jMP = MatchingPursuit(jD, jDD)
 
@@ -41,7 +41,7 @@ class CppORMP:
         if L == 1:
             self.jMP = mpv2.MatchingPursuit(jD)
         else:
-            jDD = mpv2.SymmetricMatrix(K, K)
+            jDD = mpv2.SymmetricMatrix(K)
             jDD.eqInnerProductMatrix(jD)
 
             self.jMP = mpv2.MatchingPursuit(jD, jDD)
