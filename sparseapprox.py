@@ -7,11 +7,11 @@ def sparseapprox(
     D,
     met,
     targetNonZeros=None,
-    targetRelativeError=None,
-    targetAbsoluteError=None,
-    globalRD=None,
+    targetRelativeError=None,  # always none
+    targetAbsoluteError=None,  # always none
+    globalRD=None,  # always none
     tSSE=None,
-    targetSNR=None,
+    targetSNR=None,  # always none
 ):
     """
     sparseapprox     Returns coefficients in a sparse approximation of X.
