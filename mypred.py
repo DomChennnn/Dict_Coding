@@ -28,8 +28,6 @@ def mypred(inn, nofS=None, verbose=None):
     ------------------------------------------------------------------------
 
     """
-    ## defaultoptions
-
     M = 0
     N = 0
     w = (np.array([3, 3, 2, 2])).T

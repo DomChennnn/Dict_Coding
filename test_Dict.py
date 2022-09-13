@@ -5,6 +5,7 @@ from utils import test_Dict_par
 from imageapprox import imageapprox
 
 
+# TODO 取个更好的名字
 def test_Dict(img, Ds):
     img = np.array(img, dtype=np.double)
     img_hgt, img_wdt = img.shape
@@ -19,10 +20,9 @@ def test_Dict(img, Ds):
         ompMethod="mexOMP",
         verbose=0,
     )
+
     # test_Dict_par is a dict in python
-    Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(
-        im_128, par
-    )  # the main processing function
+    Ar, PSNR, xC, dele, deldc, thr, thrdc = imageapprox(im_128, par)  # the main processing function
 
     xc_encoded = zip_lib.compress((str(xC)).encode())
     bits = len(xc_encoded) * 8
@@ -65,10 +65,10 @@ def test_Dict(img, Ds):
     return (
         psnr_val,
         bpp_val,
-        res_Ar,
-        xC,
+        res_Ar,  # used
+        xC,  # used
         dele_fin,
-        deldc_fin,
+        deldc_fin,  # used
         thr_fin,
         thrdc_fin,
         xc_encoded,

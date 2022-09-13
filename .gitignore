@@ -3,3 +3,5 @@ __pycache__
 bins
 rec
 Images/GenerallImages/Test2
+.coverage
+htmlcov/

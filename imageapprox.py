@@ -87,7 +87,7 @@ def imageapprox(A, par):
     deldc = 0
     thrdc = 0
 
-    # get the options
+    # get the options TODO 删除不太重要的注释
     dele = par.dele
     Ds = par.dictionary
     eb = par.estimateBits
@@ -120,12 +120,7 @@ def imageapprox(A, par):
         Ms = Ms - np.mod(Ms, 2)
         Ns = Ns - np.mod(Ns, 2)
 
-    if (
-        (not tr == None)
-        and (not tr == "lot")
-        and (not tr == "elt")
-        and (not tr == "dct")
-    ):
+    if (not tr == None) and (not tr == "lot") and (not tr == "elt") and (not tr == "dct"):
         Ms = max(2, np.power(2, (np.floor(np.log2(Ms))).astype(int)))
         Ns = Ms
 
@@ -178,23 +173,12 @@ def imageapprox(A, par):
         if tpsnr > 0:
             tSSE = ((Ma * Na) * peak * peak) * np.power(10, (-tpsnr / 10))
 
-            W = sparseapprox(
-                X,
-                Ds.D,
-                "javaORMP",
-                targetNonZeros=N / 2,
-                tSSE=tSSE,
-            )
+            W = sparseapprox(X, Ds.D, "javaORMP", targetNonZeros=N / 2, tSSE=tSSE)
         elif tsf < 1:
+            # TODO 这个分支没走到，可以删掉？
             tnnz = np.floor(Ma * Na * tsf) - L
             W = sparseapprox(X, Ds.D, "GMP", targetNonZeros=tnnz)
-            W = sparseapprox(
-                X,
-                Ds.D,
-                "javaORMP",
-                targetNonZeros=sum(W != 0),
-                globalRD=1,
-            )
+            W = sparseapprox(X, Ds.D, "javaORMP", targetNonZeros=sum(W != 0), globalRD=1)
             W = csr_matrix(W)
         else:
             print("imageapprox do not call sparseapprox (use W = D\X;).")
@@ -204,9 +188,7 @@ def imageapprox(A, par):
         if imageadjust:
             Ar = Ar[0:Ma, 0:Na]
         R = A - Ar
-        PSNRbq = 10 * np.log10(
-            (((Ma * Na) * peak * peak) / sum(sum(R * R)))
-        )  # sparse rep
+        PSNRbq = 10 * np.log10((((Ma * Na) * peak * peak) / sum(sum(R * R))))  # sparse rep
 
     ## Quantizing and find restored image
     adaptdelta = False
@@ -238,9 +220,7 @@ def imageapprox(A, par):
         if imageadjust:
             Ar = Ar[0:Ma, 0:Na]
         R = A - Ar
-        PSNRq = 10 * np.log10(
-            (((Ma * Na) * peak * peak) / sum(sum(R * R)))
-        )  # after quant.
+        PSNRq = 10 * np.log10((((Ma * Na) * peak * peak) / sum(sum(R * R))))  # after quant.
 
         if (not adaptdelta) or PSNRq > 30:
             break
@@ -264,18 +244,8 @@ def imageapprox(A, par):
     if len(eb) > 1:
         # estimate bits
         if Ds != None:  # a dictionary was used
-            xCw = myreshape(Zw, method=2, verbose=0)
-            xCdc = mypred(
-                Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"),
-                nofS=3,
-                verbose=0,
-            )
-            xC = []
-            for i_len in range(len(xCw) + len(xCdc)):
-                xC.append([])
+            xCw = myreshape(Zw, method=2)
+            xCdc = mypred(Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"), nofS=3, verbose=0)
+            xC = xCw + xCdc
 
-            for i in range(len(xCw)):
-                xC[i] = xCw[i]
-            for j in range(len(xCdc)):
-                xC[i + j + 1] = xCdc[j]
     return Ar, PSNRq, xC, dele, deldc, thr, thrdc

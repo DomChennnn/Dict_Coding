@@ -1,739 +1,672 @@
-/*     */ package mpv2;
-/*     */ 
-/*     */ public class MatchingPursuit {
-/*     */   private static final int MAXS = 100;
-/*     */   
-/*     */   private int N;
-/*     */   
-/*     */   private int K;
-/*     */   
-/*     */   private AllMatrices dict;
-/*     */   
-/*     */   private SymmetricMatrix ipMat;
-/*     */   
-/*     */   private boolean normalized;
-/*     */   
-/*  78 */   private int maxS1 = 0;
-/*     */   
-/*  79 */   private int maxS2 = 0;
-/*     */   
-/*     */   private double[][] r;
-/*     */   
-/*     */   private int[] T;
-/*     */   
-/*     */   private int[] J;
-/*     */   
-/*     */   private double[] d;
-/*     */   
-/*     */   private double[] e;
-/*     */   
-/*     */   private double[] u;
-/*     */   
-/*     */   private double[] c;
-/*     */   
-/*     */   private double[] ceu;
-/*     */   
-/*     */   private int[] mm;
-/*     */   
-/*     */   private double[] nx;
-/*     */   
-/*     */   public MatchingPursuit(AllMatrices paramAllMatrices) {
-/* 101 */     this.dict = paramAllMatrices;
-/* 102 */     this.N = this.dict.getN();
-/* 103 */     this.K = this.dict.getK();
-/* 104 */     this.ipMat = null;
-/* 106 */     this.normalized = checkNormalized();
-/*     */   }
-/*     */   
-/*     */   public MatchingPursuit(AllMatrices paramAllMatrices, SymmetricMatrix paramSymmetricMatrix) {
-/* 117 */     this.dict = paramAllMatrices;
-/* 118 */     this.N = this.dict.getN();
-/* 119 */     this.K = this.dict.getK();
-/* 120 */     this.ipMat = paramSymmetricMatrix;
-/* 122 */     this.normalized = checkNormalized();
-/*     */   }
-/*     */   
-/*     */   public boolean checkNormalized() {
-/* 135 */     boolean bool = true;
-/* 136 */     for (byte b = 0; b < this.K; b++) {
-/* 139 */       if (Math.abs(this.dict.innerProduct(b, b) - 1.0D) > 1.0E-6D) {
-/* 140 */         bool = false;
-/*     */         break;
-/*     */       } 
-/*     */     } 
-/* 144 */     this.normalized = bool;
-/* 145 */     return this.normalized;
-/*     */   }
-/*     */   
-/*     */   public boolean getNormalized() {
-/* 152 */     return this.normalized;
-/*     */   }
-/*     */   
-/*     */   public void setNormalized() {
-/* 158 */     this.normalized = true;
-/*     */   }
-/*     */   
-/*     */   public void clearNormalized() {
-/* 164 */     this.normalized = false;
-/*     */   }
-/*     */   
-/*     */   private double tableInnerProduct(int paramInt1, int paramInt2) {
-/*     */     double d;
-/* 177 */     if (this.normalized && paramInt1 == paramInt2)
-/* 177 */       return 1.0D; 
-/* 178 */     if (paramInt1 < 0 || paramInt2 < 0 || paramInt1 >= this.K || paramInt2 >= this.K)
-/* 178 */       return 0.0D; 
-/* 179 */     if (this.ipMat == null) {
-/* 180 */       d = this.dict.innerProduct(paramInt1, paramInt2);
-/*     */     } else {
-/* 182 */       d = this.ipMat.get(paramInt1, paramInt2);
-/*     */     } 
-/* 184 */     return d;
-/*     */   }
-/*     */   
-/*     */   private void initEkstraVariabler(int paramInt, boolean paramBoolean) {
-/* 196 */     if (paramInt > 100)
-/* 197 */       System.out.println("initEkstraVariabler: S-value is too large. Continue but may get short of memory."); 
-/* 200 */     if (paramInt > this.maxS1) {
-/* 201 */       this.r = new double[paramInt][this.K];
-/* 202 */       this.T = new int[this.K];
-/* 203 */       this.J = new int[paramInt];
-/* 204 */       this.d = new double[this.K];
-/* 205 */       this.e = new double[this.K];
-/* 206 */       this.u = new double[this.K];
-/* 207 */       this.c = new double[this.K];
-/* 208 */       this.maxS1 = paramInt;
-/*     */     } 
-/* 210 */     if (paramBoolean && paramInt > this.maxS2) {
-/* 211 */       this.ceu = new double[3 * this.K * paramInt];
-/* 212 */       this.mm = new int[paramInt * this.K];
-/* 213 */       this.nx = new double[paramInt];
-/* 214 */       this.maxS2 = paramInt;
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   public double[] vsSelectBest(double[] paramArrayOfdouble) {
-/* 232 */     double[] arrayOfDouble = new double[this.K];
-/* 233 */     if (paramArrayOfdouble.length != this.N)
-/* 234 */       throw new IllegalArgumentException("vsSelectBest: Input argument vector x is not expected length, N=" + this.N); 
-/* 237 */     vsSelectBest(paramArrayOfdouble, arrayOfDouble);
-/* 239 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   private void vsSelectBest(double[] paramArrayOfdouble1, double[] paramArrayOfdouble2) {
-/* 255 */     double[] arrayOfDouble = new double[this.K];
-/* 256 */     this.dict.transposeTimes(paramArrayOfdouble1, arrayOfDouble);
-/* 257 */     if (!this.normalized)
-/* 258 */       for (byte b = 0; b < this.K; b++)
-/* 259 */         arrayOfDouble[b] = arrayOfDouble[b] / Math.sqrt(tableInnerProduct(b, b));  
-/* 262 */     double d = 0.0D;
-/* 263 */     byte b1 = 0;
-/* 264 */     for (byte b2 = 0; b2 < this.K; b2++) {
-/* 265 */       paramArrayOfdouble2[b2] = 0.0D;
-/* 266 */       if (Math.abs(arrayOfDouble[b2]) > d) {
-/* 266 */         d = Math.abs(arrayOfDouble[b2]);
-/* 266 */         b1 = b2;
-/*     */       } 
-/*     */     } 
-/* 268 */     if (this.normalized) {
-/* 269 */       paramArrayOfdouble2[b1] = arrayOfDouble[b1];
-/*     */     } else {
-/* 271 */       paramArrayOfdouble2[b1] = arrayOfDouble[b1] / Math.sqrt(tableInnerProduct(b1, b1));
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   public double[] vsBMP(double[] paramArrayOfdouble, int paramInt) {
-/* 288 */     double[] arrayOfDouble = new double[this.K];
-/* 289 */     if (paramArrayOfdouble.length != this.N)
-/* 290 */       throw new IllegalArgumentException("vsBMP: Input argument vector x is not expected length N=" + this.N); 
-/* 293 */     if (paramInt == 1)
-/* 293 */       vsSelectBest(paramArrayOfdouble, arrayOfDouble); 
-/* 294 */     if (paramInt > 1 && paramInt <= 100)
-/* 294 */       vsBMP(paramArrayOfdouble, arrayOfDouble, paramInt, 2 * paramInt, 1.0E-5D, 0); 
-/* 295 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   void vsBMP(double[] paramArrayOfdouble1, double[] paramArrayOfdouble2, int paramInt) {
-/* 306 */     if (paramInt == 1) {
-/* 307 */       vsSelectBest(paramArrayOfdouble1, paramArrayOfdouble2);
-/* 308 */     } else if (paramInt > 1 && paramInt <= 100) {
-/* 309 */       vsBMP(paramArrayOfdouble1, paramArrayOfdouble2, paramInt, paramInt + 1 + paramInt / 3, 1.0E-6D, 0);
-/*     */     } else {
-/* 311 */       for (byte b = 0; b < this.K; ) {
-/* 311 */         paramArrayOfdouble2[b] = 0.0D;
-/* 311 */         b++;
-/*     */       } 
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   private void vsBMP(double[] paramArrayOfdouble1, double[] paramArrayOfdouble2, int paramInt1, int paramInt2, double paramDouble, int paramInt3) {
-/* 337 */     double d1 = paramDouble * paramDouble;
-/* 338 */     double[] arrayOfDouble1 = new double[this.K];
-/* 339 */     double[] arrayOfDouble2 = new double[this.N];
-/* 340 */     double d2 = 0.0D;
-/*     */     byte b1;
-/* 341 */     for (b1 = 0; b1 < this.N; b1++) {
-/* 342 */       arrayOfDouble2[b1] = paramArrayOfdouble1[b1];
-/* 343 */       d2 += paramArrayOfdouble1[b1] * paramArrayOfdouble1[b1];
-/*     */     } 
-/* 345 */     for (b1 = 0; b1 < this.K; ) {
-/* 345 */       paramArrayOfdouble2[b1] = 0.0D;
-/* 345 */       b1++;
-/*     */     } 
-/* 346 */     double d3 = d2;
-/* 347 */     boolean bool = true;
-/* 348 */     byte b2 = 0;
-/* 349 */     byte b3 = 0;
-/* 350 */     double d4 = 0.0D;
-/* 351 */     double d5 = 0.0D;
-/* 352 */     byte b4 = 0;
-/*     */     try {
-/* 354 */       while (bool) {
-/* 355 */         this.dict.transposeTimes(arrayOfDouble2, arrayOfDouble1);
-/* 356 */         if (!this.normalized)
-/* 357 */           for (byte b5 = 0; b5 < this.K; b5++)
-/* 358 */             arrayOfDouble1[b5] = arrayOfDouble1[b5] / Math.sqrt(tableInnerProduct(b5, b5));  
-/* 359 */         d4 = 0.0D;
-/* 360 */         b3 = 0;
-/* 361 */         for (byte b = 0; b < this.K; b++) {
-/* 362 */           if (Math.abs(arrayOfDouble1[b]) > d4) {
-/* 363 */             d4 = Math.abs(arrayOfDouble1[b]);
-/* 364 */             b3 = b;
-/*     */           } 
-/*     */         } 
-/* 367 */         if (paramArrayOfdouble2[b3] == 0.0D)
-/* 367 */           b2++; 
-/* 368 */         if (this.normalized) {
-/* 369 */           d5 = arrayOfDouble1[b3];
-/*     */         } else {
-/* 371 */           d5 = arrayOfDouble1[b3] / Math.sqrt(tableInnerProduct(b3, b3));
-/*     */         } 
-/* 373 */         paramArrayOfdouble2[b3] = paramArrayOfdouble2[b3] + d5;
-/* 374 */         this.dict.addColumn(b3, -d5, arrayOfDouble2);
-/* 375 */         if (b2 == paramInt1)
-/* 375 */           bool = false; 
-/* 376 */         b4++;
-/* 377 */         if (b4 >= paramInt2)
-/* 377 */           bool = false; 
-/* 378 */         d3 -= d5 * d5;
-/* 379 */         if (d3 < d1 * d2)
-/* 379 */           bool = false; 
-/*     */       } 
-/* 381 */       while (paramInt3 > 0) {
-/* 382 */         this.dict.transposeTimes(arrayOfDouble2, arrayOfDouble1);
-/* 383 */         if (!this.normalized)
-/* 384 */           for (byte b5 = 0; b5 < this.K; b5++)
-/* 385 */             arrayOfDouble1[b5] = arrayOfDouble1[b5] / Math.sqrt(tableInnerProduct(b5, b5));  
-/* 386 */         d4 = 0.0D;
-/* 387 */         b3 = 0;
-/* 388 */         for (byte b = 0; b < this.K; b++) {
-/* 389 */           if (paramArrayOfdouble2[b] != 0.0D && Math.abs(arrayOfDouble1[b]) > d4) {
-/* 390 */             d4 = Math.abs(arrayOfDouble1[b]);
-/* 391 */             b3 = b;
-/*     */           } 
-/*     */         } 
-/* 394 */         if (d4 == 0.0D)
-/*     */           break; 
-/* 395 */         if (this.normalized) {
-/* 396 */           d5 = arrayOfDouble1[b3];
-/*     */         } else {
-/* 398 */           d5 = arrayOfDouble1[b3] / Math.sqrt(tableInnerProduct(b3, b3));
-/*     */         } 
-/* 400 */         paramArrayOfdouble2[b3] = paramArrayOfdouble2[b3] + d5;
-/* 401 */         this.dict.addColumn(b3, -d5, arrayOfDouble2);
-/* 402 */         paramInt3--;
-/*     */       } 
-/* 404 */     } catch (NullPointerException nullPointerException) {
-/* 405 */       System.out.println("vsBMP: NullPointerException s=" + b2 + ", km=" + b3 + ", count=" + b4);
-/* 407 */       nullPointerException.printStackTrace();
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   public double[] vsOMP(double[] paramArrayOfdouble, int paramInt) {
-/* 432 */     double[] arrayOfDouble = new double[this.K];
-/* 433 */     if (paramArrayOfdouble.length != this.N) {
-/* 434 */       System.out.println("vsOMP: Input argument vector x is not expected length N=" + this.N);
-/* 435 */       return arrayOfDouble;
-/*     */     } 
-/* 437 */     if (paramInt == 1)
-/* 437 */       vsSelectBest(paramArrayOfdouble, arrayOfDouble); 
-/* 438 */     if (paramInt > 100)
-/* 439 */       System.out.println("vsOMP: Input argument S=" + paramInt + " is to large."); 
-/* 440 */     if (paramInt > 1 && paramInt <= 100)
-/* 440 */       vsOMPorORMP(paramArrayOfdouble, arrayOfDouble, paramInt, 1.0E-5D, true); 
-/* 441 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   public double[] vsOMP(double[] paramArrayOfdouble, double paramDouble) {
-/* 459 */     double[] arrayOfDouble = new double[this.K];
-/* 460 */     if (paramArrayOfdouble.length != this.N) {
-/* 461 */       System.out.println("vsOMP: Input argument vector x is not expected length N=" + this.N);
-/* 462 */       return arrayOfDouble;
-/*     */     } 
-/* 464 */     if (paramDouble <= 0.0D)
-/* 464 */       paramDouble = 1.0E-6D; 
-/* 465 */     vsOMPorORMP(paramArrayOfdouble, arrayOfDouble, (100 < this.N) ? 100 : this.N, paramDouble, true);
-/* 466 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   public double[] vsOMP(double[] paramArrayOfdouble, int paramInt, double paramDouble) {
-/* 485 */     double[] arrayOfDouble = new double[this.K];
-/* 486 */     if (paramArrayOfdouble.length != this.N) {
-/* 487 */       System.out.println("vsOMP: Input argument vector x is not expected length N=" + this.N);
-/* 488 */       return arrayOfDouble;
-/*     */     } 
-/* 490 */     if (paramDouble <= 0.0D)
-/* 490 */       paramDouble = 1.0E-6D; 
-/* 491 */     if (paramInt == 1)
-/* 491 */       vsSelectBest(paramArrayOfdouble, arrayOfDouble); 
-/* 492 */     if (paramInt > 100) {
-/* 493 */       System.out.println("Input argument S=" + paramInt + " is to large, S is set to " + Math.min(100, this.N));
-/* 495 */       paramInt = Math.min(100, this.N);
-/*     */     } 
-/* 497 */     if (paramInt > 1)
-/* 497 */       vsOMPorORMP(paramArrayOfdouble, arrayOfDouble, paramInt, paramDouble, true); 
-/* 498 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   public double[] vsORMP(double[] paramArrayOfdouble, int paramInt) {
-/* 516 */     double[] arrayOfDouble = new double[this.K];
-/* 517 */     if (paramArrayOfdouble.length != this.N) {
-/* 518 */       System.out.println("vsORMP: Input argument vector x is not expected length N=" + this.N);
-/* 519 */       return arrayOfDouble;
-/*     */     } 
-/* 521 */     if (paramInt == 1)
-/* 521 */       vsSelectBest(paramArrayOfdouble, arrayOfDouble); 
-/* 522 */     if (paramInt > 100) {
-/* 523 */       System.out.println("Input argument S=" + paramInt + " is to large, S is set to " + Math.min(100, this.N));
-/* 525 */       paramInt = Math.min(100, this.N);
-/*     */     } 
-/* 527 */     if (paramInt > 1 && paramInt <= 100)
-/* 527 */       vsOMPorORMP(paramArrayOfdouble, arrayOfDouble, paramInt, 1.0E-5D, false); 
-/* 528 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   public double[] vsORMP(double[] paramArrayOfdouble, double paramDouble) {
-/* 546 */     double[] arrayOfDouble = new double[this.K];
-/* 547 */     if (paramArrayOfdouble.length != this.N) {
-/* 548 */       System.out.println("vsORMP: Input argument vector x is not expected length N=" + this.N);
-/* 549 */       return arrayOfDouble;
-/*     */     } 
-/* 551 */     if (paramDouble <= 0.0D)
-/* 551 */       paramDouble = 1.0E-6D; 
-/* 552 */     vsOMPorORMP(paramArrayOfdouble, arrayOfDouble, (100 < this.N) ? 100 : this.N, paramDouble, false);
-/* 553 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   public double[] vsORMP(double[] paramArrayOfdouble, int paramInt, double paramDouble) {
-/* 572 */     double[] arrayOfDouble = new double[this.K];
-/* 573 */     if (paramArrayOfdouble.length != this.N) {
-/* 574 */       System.out.println("vsORMP: Input argument vector x is not expected length N=" + this.N);
-/* 575 */       return arrayOfDouble;
-/*     */     } 
-/* 577 */     if (paramDouble <= 0.0D)
-/* 577 */       paramDouble = 1.0E-6D; 
-/* 578 */     if (paramInt == 1)
-/* 578 */       vsSelectBest(paramArrayOfdouble, arrayOfDouble); 
-/* 579 */     if (paramInt > 100) {
-/* 580 */       System.out.println("Input argument S=" + paramInt + " is to large, S is set to " + Math.min(100, this.N));
-/* 582 */       paramInt = Math.min(100, this.N);
-/*     */     } 
-/* 584 */     if (paramInt > 1)
-/* 584 */       vsOMPorORMP(paramArrayOfdouble, arrayOfDouble, paramInt, paramDouble, false); 
-/* 585 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   void vsOMPorORMP(double[] paramArrayOfdouble1, double[] paramArrayOfdouble2, int paramInt, double paramDouble, boolean paramBoolean) {
-/* 606 */     int i = vsOMPorORMP2(paramArrayOfdouble1, paramArrayOfdouble2, paramInt, paramDouble, paramBoolean);
-/*     */   }
-/*     */   
-/*     */   int vsOMPorORMP2(double[] paramArrayOfdouble1, double[] paramArrayOfdouble2, int paramInt, double paramDouble, boolean paramBoolean) {
-/* 611 */     for (byte b1 = 0; b1 < this.K; ) {
-/* 611 */       paramArrayOfdouble2[b1] = 0.0D;
-/* 611 */       b1++;
-/*     */     } 
-/* 612 */     double d1 = 0.0D;
-/* 613 */     for (byte b2 = 0; b2 < this.N; ) {
-/* 613 */       d1 += paramArrayOfdouble1[b2] * paramArrayOfdouble1[b2];
-/* 613 */       b2++;
-/*     */     } 
-/* 614 */     double d2 = d1 * paramDouble * paramDouble;
-/* 615 */     double d3 = 0.0D;
-/* 616 */     double d4 = 0.0D;
-/* 617 */     byte b3 = 0;
-/* 618 */     initEkstraVariabler(paramInt, false);
-/* 619 */     this.dict.transposeTimes(paramArrayOfdouble1, this.c);
-/*     */     byte b4;
-/* 621 */     for (b4 = 0; b4 < this.K; b4++) {
-/* 622 */       this.T[b4] = b4;
-/* 623 */       if (this.normalized) {
-/* 624 */         this.e[b4] = 1.0D;
-/* 625 */         this.u[b4] = 1.0D;
-/*     */       } else {
-/* 627 */         this.e[b4] = tableInnerProduct(b4, b4);
-/* 628 */         this.u[b4] = Math.sqrt(this.e[b4]);
-/* 629 */         paramArrayOfdouble2[b4] = this.u[b4];
-/* 630 */         this.c[b4] = this.c[b4] / this.u[b4];
-/*     */       } 
-/* 632 */       if (Math.abs(this.c[b4]) > d3) {
-/* 633 */         d3 = Math.abs(this.c[b4]);
-/* 634 */         b3 = b4;
-/*     */       } 
-/*     */     } 
-/* 637 */     b4 = 0;
-/* 638 */     this.J[0] = b3;
-/* 639 */     this.T[b3] = -1;
-/* 640 */     this.r[0][b3] = this.u[b3];
-/* 641 */     d1 -= d3 * d3;
-/* 642 */     while (b4 + 1 < paramInt && d1 > d2) {
-/*     */       byte b;
-/* 643 */       for (b = 0; b < this.K; ) {
-/* 643 */         if (this.T[b] >= 0) {
-/* 644 */           this.r[b4][b] = tableInnerProduct(b3, b);
-/* 645 */           for (byte b5 = 0; b5 < b4; ) {
-/* 645 */             this.r[b4][b] = this.r[b4][b] - this.r[b5][b3] * this.r[b5][b];
-/* 645 */             b5++;
-/*     */           } 
-/* 646 */           if (this.u[b3] != 0.0D)
-/* 646 */             this.r[b4][b] = this.r[b4][b] / this.u[b3]; 
-/* 647 */           this.c[b] = this.c[b] * this.u[b] - this.c[b3] * this.r[b4][b];
-/* 648 */           if (paramBoolean) {
-/* 649 */             this.d[b] = Math.abs(this.c[b]);
-/* 650 */             if (!this.normalized)
-/* 650 */               this.d[b] = this.d[b] / paramArrayOfdouble2[b]; 
-/*     */           } 
-/* 652 */           this.e[b] = this.e[b] - this.r[b4][b] * this.r[b4][b];
-/* 653 */           this.u[b] = Math.sqrt(this.e[b]);
-/* 654 */           if (this.u[b] != 0.0D)
-/* 654 */             this.c[b] = this.c[b] / this.u[b]; 
-/* 655 */           if (!paramBoolean)
-/* 655 */             this.d[b] = Math.abs(this.c[b]); 
-/*     */         } 
-/*     */         b++;
-/*     */       } 
-/* 658 */       b3 = 0;
-/* 659 */       d3 = 0.0D;
-/* 660 */       for (b = 0; b < this.K; ) {
-/* 660 */         if (this.T[b] >= 0 && 
-/* 661 */           this.d[b] > d3) {
-/* 662 */           d3 = this.d[b];
-/* 663 */           b3 = b;
-/*     */         } 
-/*     */         b++;
-/*     */       } 
-/* 666 */       b4++;
-/* 667 */       this.J[b4] = b3;
-/* 668 */       this.r[b4][b3] = this.u[b3];
-/* 669 */       this.T[b3] = -1;
-/* 670 */       d1 -= this.c[b3] * this.c[b3];
-/* 671 */       if (d1 + d2 < 0.0D) {
-/* 672 */         System.out.println("vsOMPorORMP: Values not as expected, here n2x=" + d1 + ", s=" + b4 + ", normalized = " + this.normalized + ", do vsBMP instead.");
-/* 674 */         this.normalized = checkNormalized();
-/* 675 */         System.out.println("and checkNormalized returned " + this.normalized + ".");
-/* 676 */         vsBMP(paramArrayOfdouble1, paramArrayOfdouble2, paramInt, 2 * paramInt, paramDouble, 2);
-/* 677 */         return -1;
-/*     */       } 
-/*     */     } 
-/* 680 */     backSubstitution(paramArrayOfdouble2, b4);
-/* 681 */     return 0;
-/*     */   }
-/*     */   
-/*     */   private void backSubstitution(double[] paramArrayOfdouble, int paramInt) {
-/*     */     int i;
-/* 686 */     for (i = 0; i < this.K; ) {
-/* 686 */       paramArrayOfdouble[i] = 0.0D;
-/* 686 */       i++;
-/*     */     } 
-/* 687 */     for (i = paramInt; i >= 0; i--) {
-/* 688 */       int j = this.J[i];
-/* 689 */       for (int k = paramInt; k > i; ) {
-/* 689 */         this.c[j] = this.c[j] - this.c[this.J[k]] * this.r[i][this.J[k]];
-/* 689 */         k--;
-/*     */       } 
-/* 690 */       if (this.r[i][j] != 0.0D)
-/* 690 */         this.c[j] = this.c[this.J[i]] / this.r[i][j]; 
-/* 691 */       paramArrayOfdouble[j] = this.c[j];
-/*     */     } 
-/*     */   }
-/*     */   
-/*     */   public double[] vsPS(double[] paramArrayOfdouble, int paramInt1, double paramDouble, int paramInt2) {
-/* 709 */     double[] arrayOfDouble = new double[this.K];
-/* 710 */     if (paramArrayOfdouble.length != this.N) {
-/* 711 */       System.out.println("vsPS: Input argument vector x is not expected length N=" + this.N);
-/* 712 */       return arrayOfDouble;
-/*     */     } 
-/* 714 */     if (paramDouble <= 0.0D)
-/* 714 */       paramDouble = 1.0E-6D; 
-/* 715 */     if (paramInt1 == 1)
-/* 715 */       vsSelectBest(paramArrayOfdouble, arrayOfDouble); 
-/* 716 */     if (paramInt1 > 100) {
-/* 717 */       System.out.println("Input argument S=" + paramInt1 + " is to large, S is set to " + Math.min(100, this.N));
-/* 719 */       paramInt1 = Math.min(100, this.N);
-/*     */     } 
-/* 721 */     if (paramInt1 > 1)
-/* 721 */       vsPS(paramArrayOfdouble, arrayOfDouble, paramInt1, paramDouble, paramInt2); 
-/* 722 */     return arrayOfDouble;
-/*     */   }
-/*     */   
-/*     */   void vsPS(double[] paramArrayOfdouble1, double[] paramArrayOfdouble2, int paramInt1, double paramDouble, int paramInt2) {
-/* 728 */     initEkstraVariabler(paramInt1, true);
-/* 729 */     double d1 = 0.0D;
-/* 730 */     for (byte b1 = 0; b1 < this.N; ) {
-/* 730 */       d1 += paramArrayOfdouble1[b1] * paramArrayOfdouble1[b1];
-/* 730 */       b1++;
-/*     */     } 
-/* 731 */     double d2 = d1 * paramDouble * paramDouble;
-/* 732 */     double d3 = d1;
-/* 733 */     int i = 0;
-/* 735 */     this.dict.transposeTimes(paramArrayOfdouble1, this.c);
-/*     */     int j;
-/* 737 */     for (j = 0; j < this.K; j++) {
-/* 738 */       this.T[j] = j;
-/* 739 */       if (this.normalized) {
-/* 740 */         this.e[j] = 1.0D;
-/* 741 */         this.u[j] = 1.0D;
-/*     */       } else {
-/* 744 */         this.e[j] = tableInnerProduct(j, j);
-/* 745 */         this.u[j] = Math.sqrt(this.e[j]);
-/* 746 */         this.c[j] = this.c[j] / this.u[j];
-/*     */       } 
-/*     */     } 
-/* 749 */     for (j = 0; j < paramInt1; ) {
-/* 749 */       this.J[j] = -1;
-/* 749 */       j++;
-/*     */     } 
-/* 750 */     j = -1;
-/* 751 */     boolean bool = true;
-/* 752 */     int k = -1;
-/* 753 */     byte b2 = 0;
-/*     */     while (true) {
-/* 757 */       j++;
-/* 758 */       if (j < 0 || j >= paramInt1)
-/* 759 */         System.out.println("vsPS: s=" + j + ", beginning MAIN LOOP."); 
-/* 761 */       if (bool) {
-/*     */         byte b;
-/* 762 */         for (b = 0; b < this.K; ) {
-/* 762 */           this.d[b] = (this.T[b] >= 0) ? Math.abs(this.c[b]) : 0.0D;
-/* 762 */           b++;
-/*     */         } 
-/* 763 */         if (k >= 0)
-/* 763 */           this.d[k] = 0.0D; 
-/* 764 */         i = distributeFunction(paramInt1, j, paramInt2, this.mm);
-/*     */         int m;
-/* 766 */         for (b = 0, m = j * 3 * this.K; b < this.K; b++) {
-/* 767 */           this.ceu[m++] = this.c[b];
-/* 768 */           this.ceu[m++] = this.e[b];
-/* 769 */           this.ceu[m++] = this.u[b];
-/*     */         } 
-/* 771 */         this.nx[j] = d1;
-/*     */       } else {
-/*     */         byte b;
-/*     */         int m;
-/* 774 */         for (b = 0, m = j * 3 * this.K; b < this.K; b++) {
-/* 775 */           this.c[b] = this.ceu[m++];
-/* 776 */           this.e[b] = this.ceu[m++];
-/* 777 */           this.u[b] = this.ceu[m++];
-/*     */         } 
-/* 779 */         d1 = this.nx[j];
-/* 780 */         bool = true;
-/*     */       } 
-/* 783 */       this.J[j] = i;
-/* 784 */       this.T[i] = -1;
-/* 785 */       this.r[j][i] = this.u[i];
-/* 786 */       d1 -= this.c[i] * this.c[i];
-/* 788 */       if (d1 < d2) {
-/* 790 */         backSubstitution(paramArrayOfdouble2, j);
-/* 791 */         j++;
-/* 792 */         d3 = d1;
-/*     */         break;
-/*     */       } 
-/* 796 */       if (j + 1 < paramInt1) {
-/* 798 */         for (byte b = 0; b < this.K; ) {
-/* 798 */           if (this.T[b] >= 0) {
-/* 799 */             this.r[j][b] = tableInnerProduct(i, b);
-/* 800 */             for (byte b3 = 0; b3 < j; ) {
-/* 800 */               this.r[j][b] = this.r[j][b] - this.r[b3][i] * this.r[b3][b];
-/* 800 */               b3++;
-/*     */             } 
-/* 801 */             if (this.u[i] != 0.0D)
-/* 801 */               this.r[j][b] = this.r[j][b] / this.u[i]; 
-/* 802 */             this.c[b] = this.c[b] * this.u[b] - this.c[i] * this.r[j][b];
-/* 803 */             this.e[b] = this.e[b] - this.r[j][b] * this.r[j][b];
-/* 804 */             this.u[b] = Math.sqrt(this.e[b]);
-/* 805 */             if (this.u[b] != 0.0D)
-/* 805 */               this.c[b] = this.c[b] / this.u[b]; 
-/*     */           } 
-/*     */           b++;
-/*     */         } 
-/*     */         continue;
-/*     */       } 
-/* 809 */       b2++;
-/* 810 */       if (d1 < d3) {
-/* 811 */         backSubstitution(paramArrayOfdouble2, j);
-/* 812 */         d3 = d1;
-/*     */       } 
-/* 815 */       this.T[i] = i;
-/* 816 */       this.J[j] = -1;
-/* 817 */       j--;
-/* 818 */       while (j >= 0) {
-/* 819 */         int m = j * this.K;
-/* 820 */         k = this.J[j];
-/* 821 */         this.mm[m + k] = 0;
-/* 822 */         this.T[k] = k;
-/* 823 */         this.J[j] = -1;
-/* 824 */         int n = 0;
-/* 825 */         for (byte b = 0; b < this.K; b++) {
-/* 826 */           if (this.mm[m + b] > n) {
-/* 827 */             n = this.mm[m + b];
-/* 828 */             i = b;
-/*     */           } 
-/*     */         } 
-/* 831 */         if (n > 0)
-/*     */           break; 
-/* 832 */         j--;
-/*     */       } 
-/* 834 */       if (j < 0 || b2 > paramInt2) {
-/* 835 */         j = paramInt1;
-/*     */         break;
-/*     */       } 
-/* 839 */       bool = false;
-/* 840 */       j--;
-/*     */     } 
-/* 844 */     if (b2 >= (int)(paramInt2 * 0.95D) || d1 > d2);
-/*     */   }
-/*     */   
-/*     */   private static int findMin(double[] paramArrayOfdouble) {
-/* 854 */     byte b1 = 0;
-/* 855 */     double d = Double.MAX_VALUE;
-/* 856 */     for (byte b2 = 0; b2 < paramArrayOfdouble.length; ) {
-/* 856 */       if (paramArrayOfdouble[b2] > 0.0D && 
-/* 857 */         paramArrayOfdouble[b2] < d) {
-/* 857 */         b1 = b2;
-/* 857 */         d = paramArrayOfdouble[b2];
-/*     */       } 
-/*     */       b2++;
-/*     */     } 
-/* 859 */     return b1;
-/*     */   }
-/*     */   
-/*     */   private static int findMax(double[] paramArrayOfdouble) {
-/* 864 */     byte b1 = 0;
-/* 865 */     for (byte b2 = 1; b2 < paramArrayOfdouble.length; b2++) {
-/* 866 */       if (paramArrayOfdouble[b2] > paramArrayOfdouble[b1])
-/* 866 */         b1 = b2; 
-/*     */     } 
-/* 868 */     return b1;
-/*     */   }
-/*     */   
-/*     */   private int distributeFunction(int paramInt1, int paramInt2, int paramInt3, int[] paramArrayOfint) {
-/* 879 */     double d = 0.65D;
-/* 880 */     if (paramInt3 > this.K)
-/* 880 */       d = 0.5D; 
-/* 881 */     if (paramInt3 > paramInt1 * this.K)
-/* 881 */       d = 0.4D; 
-/* 882 */     if (paramInt3 > 2 * paramInt1 * this.K)
-/* 882 */       d = 0.2D; 
-/* 883 */     if (paramInt3 > 6 * paramInt1 * this.K)
-/* 883 */       d = 0.1D; 
-/* 884 */     int i = 0;
-/* 885 */     if (paramInt2 == 0)
-/* 885 */       i = paramInt3; 
-/* 886 */     if (paramInt2 == paramInt1 - 1)
-/* 886 */       i = 1; 
-/* 887 */     if (paramInt2 > 0 && paramInt2 < paramInt1 - 1)
-/* 887 */       i = paramArrayOfint[(paramInt2 - 1) * this.K + this.J[paramInt2 - 1]]; 
-/* 889 */     int j = 0;
-/* 890 */     int k = paramInt2 * this.K;
-/*     */     int m;
-/* 891 */     for (m = 0; m < this.K; ) {
-/* 891 */       paramArrayOfint[k + m] = 0;
-/* 891 */       m++;
-/*     */     } 
-/* 894 */     m = findMax(this.d);
-/* 895 */     if (this.d[m] <= 0.0D)
-/* 896 */       System.out.println("Error: distributeFunction  km=" + m + ", d[km]=" + this.d[m]); 
-/* 898 */     if (i <= 1) {
-/* 899 */       paramArrayOfint[k + m] = 1;
-/* 901 */     } else if (paramInt2 + 2 == paramInt1) {
-/* 902 */       paramArrayOfint[k + m] = 1;
-/* 903 */       this.d[m] = 0.0D;
-/* 904 */       i--;
-/* 905 */       while (i > 0) {
-/* 906 */         j = findMax(this.d);
-/* 907 */         if (this.d[j] <= 0.0D) {
-/* 908 */           System.out.println("Info: No more positive values in array d.");
-/*     */           break;
-/*     */         } 
-/* 911 */         paramArrayOfint[k + j] = 1;
-/* 912 */         this.d[j] = 0.0D;
-/* 913 */         i--;
-/*     */       } 
-/*     */     } else {
-/* 919 */       double d1 = 0.0D;
-/* 920 */       double d2 = 0.75D / (1.0D - d);
-/* 921 */       double d3 = d2 / this.d[m];
-/* 922 */       double d4 = d * this.d[m];
-/* 923 */       for (byte b = 0; b < this.K; b++) {
-/* 924 */         if (this.d[b] > 0.0D)
-/* 925 */           if (this.d[b] < d4) {
-/* 926 */             this.d[b] = 0.0D;
-/*     */           } else {
-/* 928 */             this.d[b] = this.d[b] * d3 + 1.0D - d2;
-/* 929 */             d1 += this.d[b];
-/*     */           }  
-/*     */       } 
-/* 934 */       if (d1 > 0.0D) {
-/* 935 */         double d5 = i / d1;
-/* 936 */         int n = 0;
-/*     */         byte b1;
-/* 937 */         for (b1 = 0; b1 < this.K; b1++) {
-/* 938 */           if (this.d[b1] > 0.0D) {
-/* 939 */             paramArrayOfint[k + b1] = (int)Math.round(this.d[b1] * d5);
-/* 940 */             n += paramArrayOfint[k + b1];
-/*     */           } 
-/*     */         } 
-/* 946 */         while (n < i) {
-/* 947 */           j = findMax(this.d);
-/* 948 */           paramArrayOfint[k + j] = paramArrayOfint[k + j] + 1;
-/* 949 */           this.d[j] = this.d[j] - 1.0D;
-/* 950 */           n++;
-/*     */         } 
-/* 952 */         while (n > i) {
-/* 953 */           j = 0;
-/* 954 */           for (b1 = 0; b1 < this.K; b1++) {
-/* 955 */             if (this.d[b1] > 0.0D && (this.d[j] == 0.0D || this.d[b1] < this.d[j]))
-/* 955 */               j = b1; 
-/*     */           } 
-/* 957 */           if (this.d[j] <= 0.0D)
-/*     */             break; 
-/* 958 */           if (paramArrayOfint[k + j] > 0) {
-/* 959 */             paramArrayOfint[k + j] = paramArrayOfint[k + j] - 1;
-/* 960 */             n--;
-/*     */           } 
-/* 962 */           this.d[j] = this.d[j] + 1.0D;
-/*     */         } 
-/* 964 */         if (paramArrayOfint[k + m] <= 0) {
-/* 965 */           System.out.println("Error: distributeFunction logical program error.");
-/* 966 */           paramArrayOfint[k + m] = 1;
-/* 967 */           n = 0;
-/* 968 */           for (b1 = 0; b1 < this.K; ) {
-/* 968 */             n += paramArrayOfint[k + b1];
-/* 968 */             b1++;
-/*     */           } 
-/*     */         } 
-/* 970 */         if (n != i)
-/* 971 */           System.out.println("Warning: sumMm = " + n + " != " + i + " = nCombLeft"); 
-/*     */       } else {
-/* 974 */         System.out.println("Warning: sum of d array not as expected, sumD = " + d1);
-/* 975 */         paramArrayOfint[k + m] = 1;
-/*     */       } 
-/*     */     } 
-/* 979 */     return m;
-/*     */   }
-/*     */ }
+package mpv2;
 
+public class MatchingPursuit {
 
-/* Location:              /Users/liuzenglu/codebase/Dict_Coding/javaclasses/!/mpv2/MatchingPursuit.class
- * Java compiler version: 5 (49.0)
- * JD-Core Version:       1.1.3
- */
+  public MatchingPursuit(AllMatrices allmatrices) {
+    maxS1 = 0;
+    maxS2 = 0;
+    dict = allmatrices;
+    N = dict.getN();
+    K = dict.getK();
+    ipMat = null;
+    normalized = checkNormalized();
+  }
+
+  public MatchingPursuit(AllMatrices allmatrices, SymmetricMatrix symmetricmatrix) {
+    maxS1 = 0;
+    maxS2 = 0;
+    dict = allmatrices;
+    N = dict.getN();
+    K = dict.getK();
+    ipMat = symmetricmatrix;
+    normalized = checkNormalized();
+  }
+
+  public boolean checkNormalized() {
+    boolean flag = true;
+    int i = 0;
+    do {
+      if (i >= K) {break;}
+      if (Math.abs(dict.innerProduct(i, i) - 1.0D) > 9.9999999999999995E-007D) {
+        flag = false;
+        break;
+      }
+      i++;
+    } while (true);
+    normalized = flag;
+    return normalized;
+  }
+
+  private double tableInnerProduct(int i, int j) {
+    if (normalized && i == j) {return 1.0D;}
+    if (i < 0 || j < 0 || i >= K || j >= K) {return 0.0D;}
+    double d1;
+    if (ipMat == null) {d1 = dict.innerProduct(i, j);} else {d1 = ipMat.get(i, j);}
+    return d1;
+  }
+
+  private void initEkstraVariabler(int i, boolean flag) {
+    if (i > 100) {
+      System.out.println(
+          "initEkstraVariabler: S-value is too large. Continue but may get short of memory.");
+    }
+    if (i > maxS1) {
+      r = new double[i][K];
+      T = new int[K];
+      J = new int[i];
+      d = new double[K];
+      e = new double[K];
+      u = new double[K];
+      c = new double[K];
+      maxS1 = i;
+    }
+    if (flag && i > maxS2) {
+      ceu = new double[3 * K * i];
+      mm = new int[i * K];
+      nx = new double[i];
+      maxS2 = i;
+    }
+  }
+
+  public double[] vsSelectBest(double[] ad) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      throw new IllegalArgumentException((new StringBuilder()).append(
+          "vsSelectBest: Input argument vector x is not expected length, N=").append(N).toString());
+    } else {
+      vsSelectBest(ad, ad1);
+      return ad1;
+    }
+  }
+
+  private void vsSelectBest(double[] ad, double[] ad1) {
+    double[] ad2 = new double[K];
+    dict.transposeTimes(ad, ad2);
+    if (!normalized) {
+      for (int i = 0; i < K; i++) {ad2[i] = ad2[i] / Math.sqrt(tableInnerProduct(i, i));}
+    }
+    double d1 = 0.0D;
+    int j = 0;
+    for (int k = 0; k < K; k++) {
+      ad1[k] = 0.0D;
+      if (Math.abs(ad2[k]) > d1) {
+        d1 = Math.abs(ad2[k]);
+        j = k;
+      }
+    }
+
+    if (normalized) {ad1[j] = ad2[j];} else {
+      ad1[j] = ad2[j] / Math.sqrt(tableInnerProduct(j, j));
+    }
+  }
+
+  public double[] vsBMP(double[] ad, int i) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      throw new IllegalArgumentException(
+          (new StringBuilder()).append(
+                  "vsBMP: Input argument vector x is not expected length N=")
+              .append(N).toString());
+    }
+    if (i == 1) {vsSelectBest(ad, ad1);}
+    if (i > 1 && i <= 100) {vsBMP(ad, ad1, i, 2 * i, 1.0000000000000001E-005D, 0);}
+    return ad1;
+  }
+
+  void vsBMP(double[] ad, double[] ad1, int i) {
+    if (i == 1) {vsSelectBest(ad, ad1);} else if (i > 1 && i <= 100) {
+      vsBMP(ad, ad1, i, i + 1 + i / 3, 9.9999999999999995E-007D, 0);
+    } else {
+      for (int j = 0; j < K; j++) {ad1[j] = 0.0D;}
+    }
+  }
+
+  private void vsBMP(double[] ad, double[] ad1, int i, int j, double d1, int k) {
+    double d2 = d1 * d1;
+    double[] ad2 = new double[K];
+    double[] ad3 = new double[N];
+    double d3 = 0.0D;
+    for (int l = 0; l < N; l++) {
+      ad3[l] = ad[l];
+      d3 += ad[l] * ad[l];
+    }
+
+    for (int i1 = 0; i1 < K; i1++) {ad1[i1] = 0.0D;}
+
+    double d4 = d3;
+    boolean flag = true;
+    int j1 = 0;
+    int k1 = 0;
+    int l1 = 0;
+    try {
+      do {
+        if (!flag) {break;}
+        dict.transposeTimes(ad3, ad2);
+        if (!normalized) {
+          for (int i2 = 0; i2 < K; i2++) {
+            ad2[i2] = ad2[i2] / Math.sqrt(tableInnerProduct(i2, i2));
+          }
+        }
+        double d6 = 0.0D;
+        k1 = 0;
+        for (int j2 = 0; j2 < K; j2++) {
+          if (Math.abs(ad2[j2]) > d6) {
+            d6 = Math.abs(ad2[j2]);
+            k1 = j2;
+          }
+        }
+
+        if (ad1[k1] == 0.0D) {j1++;}
+        double d9;
+        if (normalized) {d9 = ad2[k1];} else {
+          d9 = ad2[k1] / Math.sqrt(tableInnerProduct(k1, k1));
+        }
+        ad1[k1] += d9;
+        dict.addColumn(k1, -d9, ad3);
+        if (j1 == i) {flag = false;}
+        if (++l1 >= j) {flag = false;}
+        d4 -= d9 * d9;
+        if (d4 < d2 * d3) {flag = false;}
+      } while (true);
+      do {
+        if (k <= 0) {break;}
+        dict.transposeTimes(ad3, ad2);
+        if (!normalized) {
+          for (int k2 = 0; k2 < K; k2++) {
+            ad2[k2] = ad2[k2] / Math.sqrt(tableInnerProduct(k2, k2));
+          }
+        }
+        double d7 = 0.0D;
+        k1 = 0;
+        for (int l2 = 0; l2 < K; l2++) {
+          if (ad1[l2] != 0.0D && Math.abs(ad2[l2]) > d7) {
+            d7 = Math.abs(ad2[l2]);
+            k1 = l2;
+          }
+        }
+
+        if (d7 == 0.0D) {break;}
+        double d10;
+        if (normalized) {d10 = ad2[k1];} else {
+          d10 = ad2[k1] / Math.sqrt(tableInnerProduct(k1, k1));
+        }
+        ad1[k1] += d10;
+        dict.addColumn(k1, -d10, ad3);
+        k--;
+      } while (true);
+    } catch (NullPointerException nullpointerexception) {
+      System.out.println(
+          (new StringBuilder()).append("vsBMP: NullPointerException s=").append(j1).append(", km=")
+              .append(k1).append(", count=").append(l1));
+      nullpointerexception.printStackTrace();
+    }
+  }
+
+  public double[] vsOMP(double[] ad, int i) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsOMP: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (i == 1) {vsSelectBest(ad, ad1);}
+    if (i > 100) {
+      System.out.println(
+          (new StringBuilder()).append("vsOMP: Input argument S=").append(i)
+              .append(" is to large."));
+    }
+    if (i > 1 && i <= 100) {vsOMPorORMP(ad, ad1, i, 1.0000000000000001E-005D, true);}
+    return ad1;
+  }
+
+  public double[] vsOMP(double[] ad, double d1) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsOMP: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
+    vsOMPorORMP(ad, ad1, 100 >= N ? N : 100, d1, true);
+    return ad1;
+  }
+
+  public double[] vsOMP(double[] ad, int i, double d1) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsOMP: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
+    if (i == 1) {vsSelectBest(ad, ad1);}
+    if (i > 100) {
+      System.out.println((new StringBuilder()).append("Input argument S=").append(i)
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
+      i = Math.min(100, N);
+    }
+    if (i > 1) {vsOMPorORMP(ad, ad1, i, d1, true);}
+    return ad1;
+  }
+
+  public double[] vsORMP(double[] ad, int i) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsORMP: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (i == 1) {vsSelectBest(ad, ad1);}
+    if (i > 100) {
+      System.out.println((new StringBuilder()).append("Input argument S=").append(i)
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
+      i = Math.min(100, N);
+    }
+    if (i > 1 && i <= 100) {vsOMPorORMP(ad, ad1, i, 1.0000000000000001E-005D, false);}
+    return ad1;
+  }
+
+  public double[] vsORMP(double[] ad, double d1) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsORMP: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
+    vsOMPorORMP(ad, ad1, 100 >= N ? N : 100, d1, false);
+    return ad1;
+  }
+
+  public double[] vsORMP(double[] ad, int i, double d1) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsORMP: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
+    if (i == 1) {vsSelectBest(ad, ad1);}
+    if (i > 100) {
+      System.out.println((new StringBuilder()).append("Input argument S=").append(i)
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
+      i = Math.min(100, N);
+    }
+    if (i > 1) {vsOMPorORMP(ad, ad1, i, d1, false);}
+    return ad1;
+  }
+
+  void vsOMPorORMP(double[] ad, double[] ad1, int i, double d1, boolean flag) {
+    int j = vsOMPorORMP2(ad, ad1, i, d1, flag);
+  }
+
+  int vsOMPorORMP2(double[] ad, double[] ad1, int i, double d1, boolean flag) {
+    for (int j = 0; j < K; j++) {ad1[j] = 0.0D;}
+
+    double d2 = 0.0D;
+    for (int k = 0; k < N; k++) {d2 += ad[k] * ad[k];}
+
+    double d3 = d2 * d1 * d1;
+    double d4 = 0.0D;
+    double d6 = 0.0D;
+    int l = 0;
+    initEkstraVariabler(i, false);
+    dict.transposeTimes(ad, c);
+    for (int i1 = 0; i1 < K; i1++) {
+      T[i1] = i1;
+      if (normalized) {
+        e[i1] = 1.0D;
+        u[i1] = 1.0D;
+      } else {
+        e[i1] = tableInnerProduct(i1, i1);
+        u[i1] = Math.sqrt(e[i1]);
+        ad1[i1] = u[i1];
+        c[i1] = c[i1] / u[i1];
+      }
+      if (Math.abs(c[i1]) > d4) {
+        d4 = Math.abs(c[i1]);
+        l = i1;
+      }
+    }
+
+    int j1 = 0;
+    J[0] = l;
+    T[l] = -1;
+    r[0][l] = u[l];
+    for (d2 -= d4 * d4; j1 + 1 < i && d2 > d3; ) {
+      for (int k1 = 0; k1 < K; k1++) {
+        if (T[k1] < 0) {continue;}
+        r[j1][k1] = tableInnerProduct(l, k1);
+        for (int i2 = 0; i2 < j1; i2++) {r[j1][k1] -= r[i2][l] * r[i2][k1];}
+
+        if (u[l] != 0.0D) {r[j1][k1] /= u[l];}
+        c[k1] = c[k1] * u[k1] - c[l] * r[j1][k1];
+        if (flag) {
+          d[k1] = Math.abs(c[k1]);
+          if (!normalized) {d[k1] = d[k1] / ad1[k1];}
+        }
+        e[k1] -= r[j1][k1] * r[j1][k1];
+        u[k1] = Math.sqrt(e[k1]);
+        if (u[k1] != 0.0D) {c[k1] /= u[k1];}
+        if (!flag) {d[k1] = Math.abs(c[k1]);}
+      }
+
+      l = 0;
+      double d5 = 0.0D;
+      for (int l1 = 0; l1 < K; l1++) {
+        if (T[l1] >= 0 && d[l1] > d5) {
+          d5 = d[l1];
+          l = l1;
+        }
+      }
+
+      j1++;
+      J[j1] = l;
+      r[j1][l] = u[l];
+      T[l] = -1;
+      d2 -= c[l] * c[l];
+      if (d2 + d3 < 0.0D) {
+        System.out.println(
+            (new StringBuilder()).append("vsOMPorORMP: Values not as expected, here n2x=")
+                .append(d2).append(", s=").append(j1).append(", normalized = ").append(normalized)
+                .append(", do vsBMP instead."));
+        normalized = checkNormalized();
+        System.out.println(
+            (new StringBuilder()).append("and checkNormalized returned ").append(normalized)
+                .append("."));
+        vsBMP(ad, ad1, i, 2 * i, d1, 2);
+        return -1;
+      }
+    }
+
+    backSubstitution(ad1, j1);
+    return 0;
+  }
+
+  private void backSubstitution(double[] ad, int i) {
+    for (int j = 0; j < K; j++) {ad[j] = 0.0D;}
+
+    for (int k = i; k >= 0; k--) {
+      int l = J[k];
+      for (int i1 = i; i1 > k; i1--) {c[l] -= c[J[i1]] * r[k][J[i1]];}
+
+      if (r[k][l] != 0.0D) {c[l] = c[J[k]] / r[k][l];}
+      ad[l] = c[l];
+    }
+  }
+
+  public double[] vsPS(double[] ad, int i, double d1, int j) {
+    double[] ad1 = new double[K];
+    if (ad.length != N) {
+      System.out.println(
+          (new StringBuilder()).append("vsPS: Input argument vector x is not expected length N=")
+              .append(N));
+      return ad1;
+    }
+    if (d1 <= 0.0D) {d1 = 9.9999999999999995E-007D;}
+    if (i == 1) {vsSelectBest(ad, ad1);}
+    if (i > 100) {
+      System.out.println((new StringBuilder()).append("Input argument S=").append(i)
+          .append(" is to large, S is set to ").append(Math.min(100, N)));
+      i = Math.min(100, N);
+    }
+    if (i > 1) {vsPS(ad, ad1, i, d1, j);}
+    return ad1;
+  }
+
+  void vsPS(double[] ad, double[] ad1, int i, double d1, int j) {
+    initEkstraVariabler(i, true);
+    double d2 = 0.0D;
+    for (int k = 0; k < N; k++) {d2 += ad[k] * ad[k];}
+
+    double d3 = d2 * d1 * d1;
+    double d4 = d2;
+    int l = 0;
+    dict.transposeTimes(ad, c);
+    for (int i1 = 0; i1 < K; i1++) {
+      T[i1] = i1;
+      if (normalized) {
+        e[i1] = 1.0D;
+        u[i1] = 1.0D;
+      } else {
+        e[i1] = tableInnerProduct(i1, i1);
+        u[i1] = Math.sqrt(e[i1]);
+        c[i1] = c[i1] / u[i1];
+      }
+    }
+
+    for (int j1 = 0; j1 < i; j1++) {J[j1] = -1;}
+
+    int k1 = -1;
+    boolean flag = true;
+    int l1 = -1;
+    int i2 = 0;
+    do {
+      if (++k1 < 0 || k1 >= i) {
+        System.out.println(
+            (new StringBuilder()).append("vsPS: s=").append(k1).append(", beginning MAIN LOOP."));
+      }
+      if (flag) {
+        for (int j2 = 0; j2 < K; j2++) {d[j2] = T[j2] < 0 ? 0.0D : Math.abs(c[j2]);}
+
+        if (l1 >= 0) {d[l1] = 0.0D;}
+        l = distributeFunction(i, k1, j, mm);
+        int k2 = 0;
+        int k3 = k1 * 3 * K;
+        for (; k2 < K; k2++) {
+          ceu[k3++] = c[k2];
+          ceu[k3++] = e[k2];
+          ceu[k3++] = u[k2];
+        }
+
+        nx[k1] = d2;
+      } else {
+        int l2 = 0;
+        int l3 = k1 * 3 * K;
+        for (; l2 < K; l2++) {
+          c[l2] = ceu[l3++];
+          e[l2] = ceu[l3++];
+          u[l2] = ceu[l3++];
+        }
+
+        d2 = nx[k1];
+        flag = true;
+      }
+      J[k1] = l;
+      T[l] = -1;
+      r[k1][l] = u[l];
+      d2 -= c[l] * c[l];
+      if (d2 < d3) {
+        backSubstitution(ad1, k1);
+        k1++;
+        d4 = d2;
+        break;
+      }
+      if (k1 + 1 < i) {
+        int i3 = 0;
+        while (i3 < K) {
+          if (T[i3] >= 0) {
+            r[k1][i3] = tableInnerProduct(l, i3);
+            for (int i4 = 0; i4 < k1; i4++) {r[k1][i3] -= r[i4][l] * r[i4][i3];}
+
+            if (u[l] != 0.0D) {r[k1][i3] = r[k1][i3] / u[l];}
+            c[i3] = c[i3] * u[i3] - c[l] * r[k1][i3];
+            e[i3] -= r[k1][i3] * r[k1][i3];
+            u[i3] = Math.sqrt(e[i3]);
+            if (u[i3] != 0.0D) {c[i3] = c[i3] / u[i3];}
+          }
+          i3++;
+        }
+        continue;
+      }
+      i2++;
+      if (d2 < d4) {
+        backSubstitution(ad1, k1);
+        d4 = d2;
+      }
+      T[l] = l;
+      J[k1] = -1;
+      k1--;
+      do {
+        if (k1 < 0) {break;}
+        int j3 = k1 * K;
+        l1 = J[k1];
+        mm[j3 + l1] = 0;
+        T[l1] = l1;
+        J[k1] = -1;
+        int j4 = 0;
+        for (int k4 = 0; k4 < K; k4++) {
+          if (mm[j3 + k4] > j4) {
+            j4 = mm[j3 + k4];
+            l = k4;
+          }
+        }
+
+        if (j4 > 0) {break;}
+        k1--;
+      } while (true);
+      if (k1 < 0 || i2 > j) {
+        k1 = i;
+        break;
+      }
+      flag = false;
+      k1--;
+    } while (true);
+    if (i2 < (int)((double)j * 0.94999999999999996D)) {
+      if (d2 <= d3)
+        ;
+    }
+  }
+
+  private static int findMax(double[] ad) {
+    int i = 0;
+    for (int j = 1; j < ad.length; j++) {if (ad[j] > ad[i]) {i = j;}}
+
+    return i;
+  }
+
+  private int distributeFunction(int i, int j, int k, int[] ai) {
+    double d1 = 0.65000000000000002D;
+    if (k > K) {d1 = 0.5D;}
+    if (k > i * K) {d1 = 0.40000000000000002D;}
+    if (k > 2 * i * K) {d1 = 0.20000000000000001D;}
+    if (k > 6 * i * K) {d1 = 0.10000000000000001D;}
+    int l = 0;
+    if (j == 0) {l = k;}
+    if (j == i - 1) {l = 1;}
+    if (j > 0 && j < i - 1) {l = ai[(j - 1) * K + J[j - 1]];}
+    boolean flag = false;
+    int l1 = j * K;
+    for (int i2 = 0; i2 < K; i2++) {ai[l1 + i2] = 0;}
+
+    int j2 = findMax(d);
+    if (d[j2] <= 0.0D) {
+      System.out.println(
+          (new StringBuilder()).append("Error: distributeFunction  km=").append(j2)
+              .append(", d[km]=").append(d[j2]));
+    }
+    if (l <= 1) {ai[l1 + j2] = 1;} else if (j + 2 == i) {
+      ai[l1 + j2] = 1;
+      d[j2] = 0.0D;
+      l--;
+      do {
+        if (l <= 0) {break;}
+        int i1 = findMax(d);
+        if (d[i1] <= 0.0D) {
+          System.out.println("Info: No more positive values in array d.");
+          break;
+        }
+        ai[l1 + i1] = 1;
+        d[i1] = 0.0D;
+        l--;
+      } while (true);
+    } else {
+      double d2 = 0.0D;
+      double d3 = 0.75D / (1.0D - d1);
+      double d4 = d3 / d[j2];
+      double d5 = d1 * d[j2];
+      for (int k2 = 0; k2 < K; k2++) {
+        if (d[k2] <= 0.0D) {continue;}
+        if (d[k2] < d5) {
+          d[k2] = 0.0D;
+        } else {
+          d[k2] = (d[k2] * d4 + 1.0D) - d3;
+          d2 += d[k2];
+        }
+      }
+
+      if (d2 > 0.0D) {
+        double d6 = (double)l / d2;
+        int l2 = 0;
+        for (int i3 = 0; i3 < K; i3++) {
+          if (d[i3] > 0.0D) {
+            ai[l1 + i3] = (int)Math.round(d[i3] * d6);
+            l2 += ai[l1 + i3];
+          }
+        }
+
+        for (; l2 < l; l2++) {
+          int j1 = findMax(d);
+          ai[l1 + j1]++;
+          d[j1]--;
+        }
+
+        while (l2 > l) {
+          int k1 = 0;
+          for (int j3 = 0; j3 < K; j3++) {
+            if (d[j3] > 0.0D && (d[k1] == 0.0D || d[j3] < d[k1])) {k1 = j3;}
+          }
+
+          if (d[k1] <= 0.0D) {break;}
+          if (ai[l1 + k1] > 0) {
+            ai[l1 + k1]--;
+            l2--;
+          }
+          d[k1]++;
+        }
+        if (ai[l1 + j2] <= 0) {
+          System.out.println("Error: distributeFunction logical program error.");
+          ai[l1 + j2] = 1;
+          l2 = 0;
+          for (int k3 = 0; k3 < K; k3++) {l2 += ai[l1 + k3];}
+        }
+        if (l2 != l) {
+          System.out.println(
+              (new StringBuilder()).append("Warning: sumMm = ").append(l2).append(" != ")
+                  .append(l)
+                  .append(" = nCombLeft"));
+        }
+      } else {
+        System.out.println(
+            (new StringBuilder()).append("Warning: sum of d array not as expected, sumD = ")
+                .append(d2));
+        ai[l1 + j2] = 1;
+      }
+    }
+    return j2;
+  }
+
+  private final int N;
+  private final int K;
+  private final AllMatrices dict;
+  private final SymmetricMatrix ipMat;
+  private boolean normalized;
+  private int maxS1;
+  private int maxS2;
+  private double[][] r;
+  private int[] T;
+  private int[] J;
+  private double[] d;
+  private double[] e;
+  private double[] u;
+  private double[] c;
+  private double[] ceu;
+  private int[] mm;
+  private double[] nx;
+}

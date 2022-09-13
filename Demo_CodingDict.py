@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import scipy.io as scio
 import glob
@@ -7,7 +6,7 @@ import time
 import os
 from PIL import Image
 
-from utils import Dictionaries, PROJECT_ROOT
+from utils import Dictionaries, PROJECT_ROOT, dumps_np_array_to_file
 from encode import img_encode
 from decode import img_decode
 
@@ -58,7 +57,7 @@ NumberImages = len(Dimg)
 # plt.legend()
 # plt.show()
 
-for ind_img in range(40):
+for ind_img in range(NumberImages):
     path_img = os.path.join(dir_in, str(ind_img) + ".bmp")
     path_bin = os.path.join(dir_bin, str(ind_img) + ".txt")
     path_rec = os.path.join(dir_rec, str(ind_img) + ".png")

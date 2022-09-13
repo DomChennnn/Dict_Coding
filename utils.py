@@ -1,5 +1,6 @@
 import os
 import struct
+from array import array
 from PIL import ImageFile, BmpImagePlugin
 import numpy as np
 import matplotlib.pyplot as plt
@@ -9,7 +10,7 @@ import cv2
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
-# two python dict, just like C++ class
+
 class Dictionaries:
     def __init__(self, D, K, N, L, transform):
         self.D = D
@@ -19,6 +20,7 @@ class Dictionaries:
         self.transform = transform
 
 
+# TODO 取个更好的名称
 class test_Dict_par:
     def __init__(
         self, dictionary, targetPSNR, dele, qLimit, estimateBits, ompMethod, verbose
@@ -75,6 +77,17 @@ def write_body(fd, shape, out_strings):
     for s in out_strings:
         bytes_cnt += write_bytes(fd, s)
     return bytes_cnt
+
+
+def dumps_np_array_to_file(np_array, filename, type_="f"):
+    """we can load later by gsl_matrix_float_fread"""
+
+    if len(np_array.shape) not in (1, 2):
+        raise ValueError()
+
+    np_array = np_array.reshape(-1)
+    with open(filename, "wb") as f:
+        array(type_, np_array.tolist()).tofile(f)
 
 
 _i16, _i32 = BmpImagePlugin.i16, BmpImagePlugin.i32

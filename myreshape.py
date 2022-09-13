@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def myreshape(inn, method=None, verbose=None):
+def myreshape(inn, method=None, verbose=False):
     """
         myreshape       Reshape between matrix and cell array of sequences.
         The sequences should be fitted for entropy coding, see estimateBits.m
@@ -35,19 +35,14 @@ def myreshape(inn, method=None, verbose=None):
     """
 
     ## default options and get the options
+    # TODO pythonic : method = 1 if method is None else max(1, method)
     if method == None:
         method = 1
     else:
         method = max(1, method)
+
     sortrows = True
     largeLimit = 400
-    if verbose == None:
-        verbose = 0
-    else:
-        if type(verbose) == bool:
-            verbose = 1
-        else:
-            verbose = verbose
 
     ##start of function
     if type(inn) == np.ndarray:  # encoding
@@ -122,7 +117,6 @@ def myreshape(inn, method=None, verbose=None):
             if type(xC[i]) != np.ndarray:
                 xC[i] = np.array(xC[i])
         if method == 2:
-
             largeLimit = xC[0][3]
             index = xC[2] + 1
             index[index == largeLimit] = xC[3] + (largeLimit - 32)
