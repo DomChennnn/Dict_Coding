@@ -28,6 +28,8 @@ def img_encode(path_in, path_out, Ds, mode=0):
         xc_G[i] = list(xc_G[i])
         xc_B[i] = list(xc_B[i])
 
+    # TODO 建议使用 https://docs.python.org/3/library/array.html#array.array.tobytes 序列化方法
+    # str(xc_R) 序列化不利于 C 语言版本反序列化
     xc_encoded_R = zlib.compress((str(xc_R)).encode(), compress_level)
     xc_encoded_G = zlib.compress((str(xc_G)).encode(), compress_level)
     xc_encoded_B = zlib.compress((str(xc_B)).encode(), compress_level)
