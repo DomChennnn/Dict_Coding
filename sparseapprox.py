@@ -332,7 +332,6 @@ def sparseapprox(
                     else:
                         r = X[:, j]
                     SEm1[j] = np.dot(r.T, r)
-                    #
                     SEdec[j] = SEinc[j]  # SE gain by adding this atom again
                     if S[j] > 0:  # SE cost by removing another atom
                         W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
