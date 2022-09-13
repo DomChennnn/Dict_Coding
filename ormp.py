@@ -10,9 +10,7 @@ class JavaORMP:
         import jpype
 
         jvmPath = jpype.getDefaultJVMPath()  # the path of jvm.dll
-        classpath = os.path.join(
-            PROJECT_ROOT, "javaclasses"
-        )  # the path of PasswordCipher.class
+        classpath = os.path.join(PROJECT_ROOT, "javaclasses")  # the path of PasswordCipher.class
         jvmArg = "-Djava.class.path=" + classpath
         if not jpype.isJVMStarted():  # test whether the JVM is started
             jpype.startJVM(jvmPath, jvmArg)  # start JVM
@@ -39,7 +37,7 @@ class CppORMP:
     def __init__(self, D, K, L):
         import mpv2
 
-        jD = mpv2.SimpleMatrix(mpv2.DoubleVectors.from_np_array(D))
+        jD = mpv2.SimpleMatrix(D.reshape(-1, order="F"), D.shape[0])
         if L == 1:
             self.jMP = mpv2.MatchingPursuit(jD)
         else:
@@ -51,11 +49,7 @@ class CppORMP:
         print("cpp ormp", jD.getN(), jDD.getN())
 
     def apply(self, ad, i, d1):
-        import mpv2
-
-        return numpy.array(
-            self.jMP.vsORMP(mpv2.DoubleVector.from_np_array(ad), int(i), float(d1))
-        )
+        return numpy.array(self.jMP.vsORMP(ad, int(i), float(d1)))
 
 
 def get_provider():
