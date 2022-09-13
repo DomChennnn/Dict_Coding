@@ -176,153 +176,92 @@ def sparseapprox(
     if met not in ("javaORMP", "javaOrderRecursiveMatchingPursuit"):
         return W
 
-    if (met == "javaORMP") or (met == "javaOrderRecursiveMatchingPursuit"):
-        ormp_calc = get_provider()(D, K, L)
-        #
-        # This could be as simple as javaOMP, but since globalReDist was
-        # reintroduced it is now quite complicated here.
-        if targetSSE > 0:
-            # This is initialization of tre (and tnz ?) for the special case of
-            # global distribution of non-zeros where a target sum og squared
-            # errors is given as an input argument.
-            # Perhaps tnz also should be set to an appropriate value
-            # tnz = 2*ones(1,L)
-            tre = np.sqrt(targetSSE / L) / norm2X
-            globalReDist = 2
+    ormp_calc = get_provider()(D, K, L)
+    #
+    # This could be as simple as javaOMP, but since globalReDist was
+    # reintroduced it is now quite complicated here.
+    if targetSSE > 0:
+        # This is initialization of tre (and tnz ?) for the special case of
+        # global distribution of non-zeros where a target sum og squared
+        # errors is given as an input argument.
+        # Perhaps tnz also should be set to an appropriate value
+        # tnz = 2*ones(1,L)
+        tre = np.sqrt(targetSSE / L) / norm2X
+        globalReDist = 2
 
-        # below is the javaORMP lines
+    # below is the javaORMP lines
+    for j in range(L):
+        if (tnz[0, j] > 0) and (tre[j] < 1):
+            W[:, j] = ormp_calc.apply(X[:, j], np.int32(tnz[0, j]), tre[j])
+    # below is the globalReDist lines
+    # ******* START Global distribution of non-zeros.*****
+    # The structure is:
+    #    1. Initializing:  Sm1 <= S <= Sp1  and  SEm1 >= SE >= SEp1
+    #    2. Add atoms until SSE is small enough
+    #    3. or remove atoms until SSE is large enough
+    #    4. Add one atom as long as one (or more) may be removed and the
+    #       SSE is reduced
+    if globalReDist > 0:
+        # part 1
+        R = np.float32(X - np.dot(D, W))  # representation error
+        S = sum(W != 0)  # selected number of non-zeros for each column
+        SE = sum(R * R)  # squared error for each (when S is selected)
+        SSE = np.float32(sum(SE))
+        SSEinit = SSE  # store initial SSE
+        Sp1 = S + 1  # selected number of non-zeros plus one
+        Sp1[Sp1 > N] = N
+        Sm1 = S - 1  # selected number of non-zeros minus one
+        Sm1[Sm1 < 0] = 0
+        SEp1 = np.zeros((L, 1), np.float32)  # initializing corresponding squared error
+        SEm1 = np.zeros((L, 1), np.float32)
         for j in range(L):
-            if (tnz[0, j] > 0) and (tre[j] < 1):
-                W[:, j] = ormp_calc.apply(X[:, j], np.int32(tnz[0, j]), tre[j])
-        # below is the globalReDist lines
-        # ******* START Global distribution of non-zeros.*****
-        # The structure is:
-        #    1. Initializing:  Sm1 <= S <= Sp1  and  SEm1 >= SE >= SEp1
-        #    2. Add atoms until SSE is small enough
-        #    3. or remove atoms until SSE is large enough
-        #    4. Add one atom as long as one (or more) may be removed and the
-        #       SSE is reduced
-        if globalReDist > 0:
-            # part 1
-            R = np.float32(X - np.dot(D, W))  # representation error
-            S = sum(W != 0)  # selected number of non-zeros for each column
-            SE = sum(R * R)  # squared error for each (when S is selected)
-            SSE = np.float32(sum(SE))
-            SSEinit = SSE  # store initial SSE
-            Sp1 = S + 1  # selected number of non-zeros plus one
-            Sp1[Sp1 > N] = N
-            Sm1 = S - 1  # selected number of non-zeros minus one
-            Sm1[Sm1 < 0] = 0
-            SEp1 = np.zeros((L, 1), np.float32)  # initializing corresponding squared error
-            SEm1 = np.zeros((L, 1), np.float32)
-            for j in range(L):
-                x = X[:, j]
-                if Sp1[j] == S[j]:  # == N
-                    w = W[:, j]
-                else:
-                    w = ormp_calc.apply(x, Sp1[j], relLim)
-                r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
-                SEp1[j] = np.dot(r.T, r)
-                if Sm1[j] == 0:
-                    w = np.zeros((K, 1))
-                else:
-                    w = ormp_calc.apply(x, Sm1[j], relLim)
-                r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
-                SEm1[j] = np.dot(r.T, r)
-            SEdec = SE.reshape(-1, 1) - SEp1  # the decrease in error by selectiong one more
-            SEinc = SEm1 - SE.reshape(-1, 1)  # the increase in error by selectiong one less
-            SEinc[S == 0] = np.inf  # not possible to select fewer than zero
-            addedS = 0
-            removedS = 0
-            addedSE = np.float32(0)
-            removedSE = 0
-            valinc, jinc = np.min(SEinc), np.argmin(SEinc)  # min increase in SE by removing one atom
-            valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # max reduction in SE by adding one atom
-
-            if targetSSE > 0:
-                if SSEinit > targetSSE:  # part 2
-                    while SSE > targetSSE:
-                        j = jdec  # an atom is added to vector j
-                        addedS = addedS + 1
-                        removedSE = removedSE + valdec
-                        SSE = SSE - valdec
-                        # shift in  Sm1,S,Sp1  and  SEm1,SE,SEp1
-                        Sm1[j], S[j], Sp1[j] = S[j], Sp1[j], min(Sp1[j] + 1, N)
-                        SEm1[j], SE[j] = SE[j], SEp1[j]  # and SEp1(j)=SEp1(j)
-                        if Sp1[j] > S[j]:  # the normal case, find new SEp1(j)
-                            w = ormp_calc.apply(X[:, j], Sp1[j], relLim)
-                            r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
-                            SEp1[j] = np.dot(r.T, r)
-                        SEinc[j] = SEdec[j]  # SE cost by removing this again
-                        SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
-                        #
-                        W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
-                        valdec, jdec = np.max(SEdec), np.argmax(SEdec)
-
-                    valinc, jinc = np.min(SEinc), np.argmax(SEdec)
-                elif (SSEinit + valinc) < targetSSE:  # part 3
-                    while (SSE + valinc) < targetSSE:
-                        j = jinc  # an atom is removed from vector j
-                        removedS = removedS + 1
-                        addedSE = addedSE + valinc
-                        SSE = SSE + valinc
-                        # shift in  Sm1,S,Sp1  and  SEm1,SE,SEp1
-                        Sm1[j], S[j], Sp1[j] = max(Sm1[j] - 1, 0), Sm1[j], S[j]
-                        SE[j], SEp1[j] = SEm1[j], SE[j]  # and SEm1(j)=SEm1(j)
-                        if Sm1[j] > 0:
-                            w = ormp_calc.apply((X[:, j]), Sm1[j], relLim)
-                            r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
-                        else:
-                            r = X[:, j]
-
-                        SEm1[j] = np.dot(r.T, r)
-                        #
-                        SEdec[j] = SEinc[j]  # SE gain by adding this atom again
-                        if S[j] > 0:  # SE cost by removing another atom
-                            W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
-                            SEinc[j] = SEm1[j] - SE[j]
-                        else:
-                            W[:, j] = 0
-                            SEinc[j] = np.inf  # can not select fewer and increase error
-
-                        valinc, jinc = np.min(SEinc), np.argmin(SEinc)
-
-                    valdec, jdec = np.max(SEdec), np.argmax(SEdec)
-                else:  #
-                    print(
-                        [
-                            "(target SSE = ",
-                            str(targetSSE),
-                            " is close to initial SSE = ",
-                            str(SSEinit),
-                            ")",
-                        ]
-                    )
-
+            x = X[:, j]
+            if Sp1[j] == S[j]:  # == N
+                w = W[:, j]
             else:
-                targetSSE = SSEinit
+                w = ormp_calc.apply(x, Sp1[j], relLim)
+            r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
+            SEp1[j] = np.dot(r.T, r)
+            if Sm1[j] == 0:
+                w = np.zeros((K, 1))
+            else:
+                w = ormp_calc.apply(x, Sm1[j], relLim)
+            r = x.reshape(-1, 1) - (np.dot(D, w)).reshape(-1, 1)
+            SEm1[j] = np.dot(r.T, r)
+        SEdec = SE.reshape(-1, 1) - SEp1  # the decrease in error by selectiong one more
+        SEinc = SEm1 - SE.reshape(-1, 1)  # the increase in error by selectiong one less
+        SEinc[S == 0] = np.inf  # not possible to select fewer than zero
+        addedS = 0
+        removedS = 0
+        addedSE = np.float32(0)
+        removedSE = 0
+        valinc, jinc = np.min(SEinc), np.argmin(SEinc)  # min increase in SE by removing one atom
+        valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # max reduction in SE by adding one atom
 
-            # part 4
-            while (valinc < valdec) and (jinc != jdec):
-                j = jdec
-                addedS = addedS + 1
-                removedSE = removedSE + valdec
-                SSE = SSE - valdec
-                # shift in  Sm1,S,Sp1  and  SEm1,SE,SEp1
-                Sm1[j], S[j], Sp1[j] = S[j], Sp1[j], min(Sp1[j] + 1, N)
-                SEm1[j], SE[j] = SE[j], SEp1[j]  # and SEp1(j)=SEp1(j)
-                if Sp1[j] > S[j]:  # the normal case, find new SEp1(j)
-                    w = ormp_calc.apply(X[:, j], Sp1[j], relLim)
-                    r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
-                    SEp1[j] = np.dot(r.T, r)
+        if targetSSE > 0:
+            if SSEinit > targetSSE:  # part 2
+                while SSE > targetSSE:
+                    j = jdec  # an atom is added to vector j
+                    addedS = addedS + 1
+                    removedSE = removedSE + valdec
+                    SSE = SSE - valdec
+                    # shift in  Sm1,S,Sp1  and  SEm1,SE,SEp1
+                    Sm1[j], S[j], Sp1[j] = S[j], Sp1[j], min(Sp1[j] + 1, N)
+                    SEm1[j], SE[j] = SE[j], SEp1[j]  # and SEp1(j)=SEp1(j)
+                    if Sp1[j] > S[j]:  # the normal case, find new SEp1(j)
+                        w = ormp_calc.apply(X[:, j], Sp1[j], relLim)
+                        r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
+                        SEp1[j] = np.dot(r.T, r)
+                    SEinc[j] = SEdec[j]  # SE cost by removing this again
+                    SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
+                    #
+                    W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
+                    valdec, jdec = np.max(SEdec), np.argmax(SEdec)
 
-                SEinc[j] = SEdec[j]  # SE cost by removing this again
-                SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
-                W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
-                valinc, jinc = np.min(SEinc), np.argmin(SEinc)
-                #
+                valinc, jinc = np.min(SEinc), np.argmax(SEdec)
+            elif (SSEinit + valinc) < targetSSE:  # part 3
                 while (SSE + valinc) < targetSSE:
-                    j = jinc
+                    j = jinc  # an atom is removed from vector j
                     removedS = removedS + 1
                     addedSE = addedSE + valinc
                     SSE = SSE + valinc
@@ -330,11 +269,13 @@ def sparseapprox(
                     Sm1[j], S[j], Sp1[j] = max(Sm1[j] - 1, 0), Sm1[j], S[j]
                     SE[j], SEp1[j] = SEm1[j], SE[j]  # and SEm1(j)=SEm1(j)
                     if Sm1[j] > 0:
-                        w = ormp_calc.apply(X[:, j], Sm1[j], relLim)
+                        w = ormp_calc.apply((X[:, j]), Sm1[j], relLim)
                         r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
                     else:
                         r = X[:, j]
+
                     SEm1[j] = np.dot(r.T, r)
+                    #
                     SEdec[j] = SEinc[j]  # SE gain by adding this atom again
                     if S[j] > 0:  # SE cost by removing another atom
                         W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
@@ -342,8 +283,66 @@ def sparseapprox(
                     else:
                         W[:, j] = 0
                         SEinc[j] = np.inf  # can not select fewer and increase error
+
                     valinc, jinc = np.min(SEinc), np.argmin(SEinc)
-                    if globalReDist == 1:
-                        break
-                valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # next now
+
+                valdec, jdec = np.max(SEdec), np.argmax(SEdec)
+            else:  #
+                print(
+                    [
+                        "(target SSE = ",
+                        str(targetSSE),
+                        " is close to initial SSE = ",
+                        str(SSEinit),
+                        ")",
+                    ]
+                )
+
+        else:
+            targetSSE = SSEinit
+
+        # part 4
+        while (valinc < valdec) and (jinc != jdec):
+            j = jdec
+            addedS = addedS + 1
+            removedSE = removedSE + valdec
+            SSE = SSE - valdec
+            # shift in  Sm1,S,Sp1  and  SEm1,SE,SEp1
+            Sm1[j], S[j], Sp1[j] = S[j], Sp1[j], min(Sp1[j] + 1, N)
+            SEm1[j], SE[j] = SE[j], SEp1[j]  # and SEp1(j)=SEp1(j)
+            if Sp1[j] > S[j]:  # the normal case, find new SEp1(j)
+                w = ormp_calc.apply(X[:, j], Sp1[j], relLim)
+                r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
+                SEp1[j] = np.dot(r.T, r)
+
+            SEinc[j] = SEdec[j]  # SE cost by removing this again
+            SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
+            W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
+            valinc, jinc = np.min(SEinc), np.argmin(SEinc)
+            #
+            while (SSE + valinc) < targetSSE:
+                j = jinc
+                removedS = removedS + 1
+                addedSE = addedSE + valinc
+                SSE = SSE + valinc
+                # shift in  Sm1,S,Sp1  and  SEm1,SE,SEp1
+                Sm1[j], S[j], Sp1[j] = max(Sm1[j] - 1, 0), Sm1[j], S[j]
+                SE[j], SEp1[j] = SEm1[j], SE[j]  # and SEm1(j)=SEm1(j)
+                if Sm1[j] > 0:
+                    w = ormp_calc.apply(X[:, j], Sm1[j], relLim)
+                    r = X[:, [j]] - (np.dot(D, w)).reshape(-1, 1)
+                else:
+                    r = X[:, j]
+                SEm1[j] = np.dot(r.T, r)
+                SEdec[j] = SEinc[j]  # SE gain by adding this atom again
+                if S[j] > 0:  # SE cost by removing another atom
+                    W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
+                    SEinc[j] = SEm1[j] - SE[j]
+                else:
+                    W[:, j] = 0
+                    SEinc[j] = np.inf  # can not select fewer and increase error
+                valinc, jinc = np.min(SEinc), np.argmin(SEinc)
+                if globalReDist == 1:
+                    break
+            valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # next now
     return W
