@@ -343,8 +343,10 @@ def sparseapprox(
                 W[:, j] = 0
                 SEinc[j] = np.inf  # can not select fewer and increase error
             valinc, jinc = np.min(SEinc), np.argmin(SEinc)
+
             if globalReDist == 1:
                 break
+
         valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # next now
 
     return W
