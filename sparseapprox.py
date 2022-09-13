@@ -193,6 +193,9 @@ def sparseapprox(
         if (tnz[0, j] > 0) and (tre[j] < 1):
             W[:, j] = ormp_calc.apply(X[:, j], np.int32(tnz[0, j]), tre[j])
 
+    if globalReDist <= 0:
+        return W
+
     # below is the globalReDist lines
     # ******* START Global distribution of non-zeros.*****
     # The structure is:
