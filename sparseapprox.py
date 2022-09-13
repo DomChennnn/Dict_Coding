@@ -13,7 +13,6 @@ def sparseapprox(
     tSSE=None,
     targetSNR=None,
 ):
-
     """
     sparseapprox     Returns coefficients in a sparse approximation of X.
                   Several methods for sparse approximation may be used,
