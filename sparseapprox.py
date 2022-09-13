@@ -299,7 +299,6 @@ def sparseapprox(
                     ")",
                 ]
             )
-
     else:
         targetSSE = SSEinit
 
@@ -347,4 +346,5 @@ def sparseapprox(
             if globalReDist == 1:
                 break
         valdec, jdec = np.max(SEdec), np.argmax(SEdec)  # next now
+
     return W
