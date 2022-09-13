@@ -320,7 +320,7 @@ def sparseapprox(
         SEdec[j] = SE[j] - SEp1[j]  # SE gain by adding one more atom
         W[:, j] = ormp_calc.apply(X[:, j], S[j], relLim)
         valinc, jinc = np.min(SEinc), np.argmin(SEinc)
-        #
+
         while (SSE + valinc) < targetSSE:
             j = jinc
             removedS = removedS + 1
