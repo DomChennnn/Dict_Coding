@@ -42,30 +42,27 @@ def myimadjust(A, met=None, fac=None):
     if not addRows and not addCols:
         return A
 
-    if (addRows > 0) or (addCols > 0):  # adjust is needed
-        if L == 1:  # simpler operations can be used
-            if met == None:
-                A = A[0 : (M - np.mod(M, fac[0])), 0 : (N - np.mod(N, fac[1]))]
-            elif met == "extend":
-                if addRows > 0:
-                    A = np.concatenate((A, np.multiply(np.ones((addRows, 1)), A[[-1], :])), axis=0)
-                if addCols > 0:
-                    A = np.concatenate((A, np.multiply(A[:, [-1]], np.ones((1, addCols)))), axis=1)
-            elif met == "periodic":
-                if addRows > 0:
-                    A = np.concatenate((A, A[0:addRows, :]), axis=0)
-                if addCols > 0:
-                    A = np.concatenate((A, A[:, 0:addCols]), axis=1)
-            elif met == "mirror":
-                if addRows > 0:
-                    A = np.concatenate((A, A[(M - addRows) : M, :]), axis=0)
-                if addCols > 0:
-                    A = np.concatenate((A, A[:, (N - addCols) : N]), axis=1)
-            elif met == "zeros":
-                if addRows > 0:
-                    A = np.concatenate((A, np.zeros((addRows, N))), axis=0)
-                if addCols > 0:
-                    A = np.concatenate((A, np.zeros((M + addRows, addCols))), axis=1)
-        else:
-            print("not ready for several layers, it will be added later")
+    if met == None:
+        A = A[0 : (M - np.mod(M, fac[0])), 0 : (N - np.mod(N, fac[1]))]
+    elif met == "extend":
+        if addRows > 0:
+            A = np.concatenate((A, np.multiply(np.ones((addRows, 1)), A[[-1], :])), axis=0)
+        if addCols > 0:
+            A = np.concatenate((A, np.multiply(A[:, [-1]], np.ones((1, addCols)))), axis=1)
+    elif met == "periodic":
+        if addRows > 0:
+            A = np.concatenate((A, A[0:addRows, :]), axis=0)
+        if addCols > 0:
+            A = np.concatenate((A, A[:, 0:addCols]), axis=1)
+    elif met == "mirror":
+        if addRows > 0:
+            A = np.concatenate((A, A[(M - addRows) : M, :]), axis=0)
+        if addCols > 0:
+            A = np.concatenate((A, A[:, (N - addCols) : N]), axis=1)
+    elif met == "zeros":
+        if addRows > 0:
+            A = np.concatenate((A, np.zeros((addRows, N))), axis=0)
+        if addCols > 0:
+            A = np.concatenate((A, np.zeros((M + addRows, addCols))), axis=1)
+
     return A
