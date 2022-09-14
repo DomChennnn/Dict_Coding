@@ -42,7 +42,7 @@ def myimadjust(A, met=None, fac=None):
     if not addRows and not addCols:
         return A
 
-    if met == None:
+    if met is None:
         A = A[0 : (M - np.mod(M, fac[0])), 0 : (N - np.mod(N, fac[1]))]
     elif met == "extend":
         if addRows > 0:
