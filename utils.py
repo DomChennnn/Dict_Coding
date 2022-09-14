@@ -3,10 +3,7 @@ import struct
 from array import array
 from PIL import ImageFile, BmpImagePlugin
 import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib
 from struct import unpack
-import cv2
 
 PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
 
@@ -22,9 +19,7 @@ class Dictionaries:
 
 # TODO 取个更好的名称
 class test_Dict_par:
-    def __init__(
-        self, dictionary, targetPSNR, dele, qLimit, estimateBits, ompMethod, verbose
-    ):
+    def __init__(self, dictionary, targetPSNR, dele, qLimit, estimateBits, ompMethod, verbose):
         self.dictionary = dictionary
         self.targetPSNR = targetPSNR
         self.dele = dele
