@@ -1,10 +1,10 @@
 目前较为稳定的py文件，但不排除日后根据华为需求调整和增减修改，标*的基本稳定
 
 utils.py		*
-uniquant.py	*
-mycol2im.py	*
+uniquant.py	    *
+mycol2im.py	    *
 myilwt.py		*
-myim2col.py	*
+myim2col.py	    *
 myimadjust.py	*
 mylwt.py		*
 mypred.py
