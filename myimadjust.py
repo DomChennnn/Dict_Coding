@@ -19,13 +19,7 @@ def myimadjust(A, met=None, fac=None):
     :return adjusted img
     """
     if met != None:
-        if not (
-            (met == None)
-            or (met == "extend")
-            or (met == "zeros")
-            or (met == "periodic")
-            or (met == "mirror")
-        ):
+        if not ((met == None) or (met == "extend") or (met == "zeros") or (met == "periodic") or (met == "mirror")):
             print("Illegal method given", met, "changed to none")
             met = None
 
@@ -38,9 +32,15 @@ def myimadjust(A, met=None, fac=None):
     else:
         M, N, L = A.shape
 
+    if L != 1:
+        raise ValueError("not ready for several layers, it will be added later")
+
     A = np.array(A, np.double)
     addRows = np.mod((fac[0] - np.mod(M, fac[0])), fac[0])
     addCols = np.mod((fac[1] - np.mod(N, fac[1])), fac[1])
+
+    if not addRows and not addCols:
+        return A
 
     if (addRows > 0) or (addCols > 0):  # adjust is needed
         if L == 1:  # simpler operations can be used
@@ -48,13 +48,9 @@ def myimadjust(A, met=None, fac=None):
                 A = A[0 : (M - np.mod(M, fac[0])), 0 : (N - np.mod(N, fac[1]))]
             elif met == "extend":
                 if addRows > 0:
-                    A = np.concatenate(
-                        (A, np.multiply(np.ones((addRows, 1)), A[[-1], :])), axis=0
-                    )
+                    A = np.concatenate((A, np.multiply(np.ones((addRows, 1)), A[[-1], :])), axis=0)
                 if addCols > 0:
-                    A = np.concatenate(
-                        (A, np.multiply(A[:, [-1]], np.ones((1, addCols)))), axis=1
-                    )
+                    A = np.concatenate((A, np.multiply(A[:, [-1]], np.ones((1, addCols)))), axis=1)
             elif met == "periodic":
                 if addRows > 0:
                     A = np.concatenate((A, A[0:addRows, :]), axis=0)
@@ -71,5 +67,5 @@ def myimadjust(A, met=None, fac=None):
                 if addCols > 0:
                     A = np.concatenate((A, np.zeros((M + addRows, addCols))), axis=1)
         else:
-            print("not ready for serveal layers, it will be added later")
+            print("not ready for several layers, it will be added later")
     return A
