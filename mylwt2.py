@@ -66,12 +66,8 @@ def mylwt2(X, ls, nivaa):
     # do transform inplace in Y
     for k in range(1, nivaa + 1):
         if np.mod(M, np.power(2, k)) == 0:  # the columns
-            all = np.array(
-                range(1, N + 1, np.power(2, k - 1))
-            )  # all columns at this level
-            lpI = np.array(
-                range(1, M + 1, np.power(2, k))
-            )  # low-pass rows (elements in columns)
+            all = np.array(range(1, N + 1, np.power(2, k - 1)))  # all columns at this level
+            lpI = np.array(range(1, M + 1, np.power(2, k)))  # low-pass rows (elements in columns)
             hpI = lpI + (np.power(2, k - 1))
             for i in range(len(ls) - 1):
                 if ls[i][0] == "d":  # dual, update hp
@@ -86,8 +82,7 @@ def mylwt2(X, ls, nivaa):
 
                         Y[hpI.reshape(-1, 1) - 1, all.reshape(1, -1) - 1] = (
                             Y[hpI.reshape(-1, 1) - 1, all.reshape(1, -1) - 1]
-                            + Y[I.reshape(-1, 1) - 1, all.reshape(1, -1) - 1]
-                            * ls[i][1][j - 1]
+                            + Y[I.reshape(-1, 1) - 1, all.reshape(1, -1) - 1] * ls[i][1][j - 1]
                         )
 
                 if ls[i][0] == "p":  # dual, update hp
@@ -102,8 +97,7 @@ def mylwt2(X, ls, nivaa):
 
                         Y[lpI.reshape(-1, 1) - 1, all.reshape(1, -1) - 1] = (
                             Y[lpI.reshape(-1, 1) - 1, all.reshape(1, -1) - 1]
-                            + Y[I.reshape(-1, 1) - 1, all.reshape(1, -1) - 1]
-                            * ls[i][1][j - 1]
+                            + Y[I.reshape(-1, 1) - 1, all.reshape(1, -1) - 1] * ls[i][1][j - 1]
                         )
 
             Y[lpI.reshape(-1, 1) - 1, all.reshape(1, -1) - 1] = (
@@ -114,12 +108,8 @@ def mylwt2(X, ls, nivaa):
             )  # scaling high-pass
 
         if np.mod(N, np.power(2, k)) == 0:  # the rows
-            all = np.array(
-                range(1, M + 1, np.power(2, k - 1))
-            )  # all rows at this level
-            lpI = np.array(
-                range(1, N + 1, np.power(2, k))
-            )  # low-pass cols (elements in columns)
+            all = np.array(range(1, M + 1, np.power(2, k - 1)))  # all rows at this level
+            lpI = np.array(range(1, N + 1, np.power(2, k)))  # low-pass cols (elements in columns)
             hpI = lpI + (np.power(2, k - 1))
             for i in range(len(ls) - 1):
                 if ls[i][0] == "d":  # dual, update hp
@@ -134,8 +124,7 @@ def mylwt2(X, ls, nivaa):
 
                         Y[all.reshape(-1, 1) - 1, hpI.reshape(1, -1) - 1] = (
                             Y[all.reshape(-1, 1) - 1, hpI.reshape(1, -1) - 1]
-                            + Y[all.reshape(-1, 1) - 1, I.reshape(1, -1) - 1]
-                            * ls[i][1][j - 1]
+                            + Y[all.reshape(-1, 1) - 1, I.reshape(1, -1) - 1] * ls[i][1][j - 1]
                         )
 
                 if ls[i][0] == "p":  # dual, update hp
@@ -150,8 +139,7 @@ def mylwt2(X, ls, nivaa):
 
                         Y[all.reshape(-1, 1) - 1, lpI.reshape(1, -1) - 1] = (
                             Y[all.reshape(-1, 1) - 1, lpI.reshape(1, -1) - 1]
-                            + Y[all.reshape(-1, 1) - 1, I.reshape(1, -1) - 1]
-                            * ls[i][1][j - 1]
+                            + Y[all.reshape(-1, 1) - 1, I.reshape(1, -1) - 1] * ls[i][1][j - 1]
                         )
 
             Y[all.reshape(-1, 1) - 1, lpI.reshape(1, -1) - 1] = (
