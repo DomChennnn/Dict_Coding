@@ -2,10 +2,10 @@
 
 utils.py		*
 uniquant.py	    *
-mycol2im.py	    *
-myilwt.py		*
-myim2col.py	    *
 myimadjust.py	*
+mycol2im.py	    *
+myim2col.py	    *
+myilwt.py		*
 mylwt.py		*
 mypred.py
 myreshape.py
