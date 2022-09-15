@@ -154,5 +154,4 @@ def myilwt2(Y, ls, nivaa):
                             - Y[I.reshape(-1, 1) - 1, all.reshape(1, -1) - 1] * ls[i][1][j - 1]
                         )
 
-    A = Y
-    return A
+    return Y
