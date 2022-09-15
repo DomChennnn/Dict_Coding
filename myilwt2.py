@@ -71,7 +71,6 @@ def myilwt2(Y, ls, nivaa):
 
     # do transform inplace in Y
     for k in range(nivaa, 0, -1):
-
         if np.mod(N, np.power(2, k)) == 0:  # the rows
             all = np.array(range(1, M + 1, np.power(2, k - 1)))  # all rows at this level
             lpI = np.array(range(1, N + 1, np.power(2, k)))  # low-pass cols (elements in columns)
