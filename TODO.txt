@@ -8,11 +8,11 @@ Python代码项目名称建议改为 py_juicer，这样以来mylwt2类似的名�
 C语言版本编码器 -> juicer
 STM32版本解码器 -> turbo-juicer
 
-2. 优化内存使用
+2. 控制内存用量
 
 3. 建议使用 pylint 工具检查代码并修复 warning
 
-4. 确认可以使用float32而不是float64
+4. 确认使用float32/int而不是float64/long
 
 5. 使用 coverage 工具检查 dead code，可以找出哪些代码可以废弃：
     coverage run Demo_CodingDict.py && coverage html
@@ -20,3 +20,5 @@ STM32版本解码器 -> turbo-juicer
 6. encode.py/decode.py 存在大量重复代码
 
 7. 使用更成熟的RLE实现
+
+8. 在不使用GPU加速的情况下再次验证算法性能
