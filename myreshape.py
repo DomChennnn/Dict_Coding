@@ -35,11 +35,7 @@ def myreshape(inn, method=None, verbose=False):
     """
 
     ## default options and get the options
-    # TODO pythonic : method = 1 if method is None else max(1, method)
-    if method == None:
-        method = 1
-    else:
-        method = max(1, method)
+    method = max(1, method or 0)
 
     sortrows = True
     largeLimit = 400
