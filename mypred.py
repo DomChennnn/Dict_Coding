@@ -32,12 +32,12 @@ def mypred(inn, nofS=None, verbose=None):
     N = 0
     w = (np.array([3, 3, 2, 2])).T
 
-    if nofS == None:
+    if nofS is None:
         nofS = 3
     else:
         nofS = max(1, np.floor(abs(nofS)))
 
-    if verbose == None:
+    if verbose is None:
         verbose = 0
     else:
         if type(verbose) == bool:

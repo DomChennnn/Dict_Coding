@@ -105,18 +105,18 @@ def sparseapprox(
     relLim = 1e-6
     tre = relLim * np.ones((1, L))  # target relative error: ||r|| <= tre*||x||
 
-    if globalRD == None:
+    if globalRD is None:
         globalReDist = 0  # may be used with javaORMP
     else:
         globalReDist = min(max(np.floor(globalRD), 0), 2)  # 0, 1 or 2
 
-    if tSSE == None:
+    if tSSE is None:
         targetSSE = 0  # may be used with javaORMP
     else:
         targetSSE = min(max(tSSE, 0), np.sum(X * X))
 
     # get the options
-    if targetNonZeros != None:
+    if targetNonZeros is not None:
         if met == "GMP":
             tnz = targetNonZeros  # GMP will distribute the non-zeros
         else:
@@ -134,7 +134,7 @@ def sparseapprox(
                     ]
                 )
 
-    if targetRelativeError != None:
+    if targetRelativeError is not None:
         if len(targetRelativeError) == 1:
             tre = targetRelativeError * np.ones((1, L))
         elif len(targetRelativeError) == L:
@@ -148,7 +148,7 @@ def sparseapprox(
                 ]
             )
 
-    if targetAbsoluteError != None:
+    if targetAbsoluteError is not None:
         if len(targetAbsoluteError) == 1:
             tae = targetAbsoluteError * np.ones((1, L))
         elif len(targetAbsoluteError) == L:
@@ -162,13 +162,13 @@ def sparseapprox(
                 ]
             )
 
-    if targetSNR != None:
+    if targetSNR is not None:
         if type(targetSNR) == float:
             targetSSE = 10 ^ (-abs(targetSNR) / 10) * sum(sum(X * X))
         else:
             print(["sparseapprox", ": illegal size of value for option ", "targetSNR"])
 
-    if tae != None:  # if both exist 'tae' overrules 'tre'
+    if tae is not None:  # if both exist 'tae' overrules 'tre'
         tre = tae / norm2X
     else:  # 'tre' was given a default value
         tae = tre * norm2X  # TODO 变量未使用，使用pylint工具检查一下其他类似问题

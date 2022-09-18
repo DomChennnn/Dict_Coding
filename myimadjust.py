@@ -18,8 +18,8 @@ def myimadjust(A, met=None, fac=None):
                used on the height and the second on the width
     :return adjusted img
     """
-    if met != None:
-        if not ((met == None) or (met == "extend") or (met == "zeros") or (met == "periodic") or (met == "mirror")):
+    if met is not None:
+        if not ((met is None) or (met == "extend") or (met == "zeros") or (met == "periodic") or (met == "mirror")):
             print("Illegal method given", met, "changed to none")
             met = None
 

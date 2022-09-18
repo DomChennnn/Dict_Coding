@@ -109,7 +109,7 @@ def imageapprox(A, par):
         Ns = 8
 
     if (Ms == 0) or (Ns == 0):
-        if tr == None:
+        if tr is None:
             Ms = 4
             Ns = 4
         else:
@@ -120,7 +120,7 @@ def imageapprox(A, par):
         Ms = Ms - np.mod(Ms, 2)
         Ns = Ns - np.mod(Ns, 2)
 
-    if (not tr == None) and (not tr == "lot") and (not tr == "elt") and (not tr == "dct"):
+    if (not tr is None) and (not tr == "lot") and (not tr == "elt") and (not tr == "dct"):
         Ms = max(2, np.power(2, (np.floor(np.log2(Ms))).astype(int)))
         Ns = Ms
 
@@ -159,7 +159,7 @@ def imageapprox(A, par):
             raise IndexError("imageapprox: can not match size of A and X")
 
     # Extract DC both for transform only and (transform and) dictionary
-    if tr == None:  # extract DC as first row ( or mean)
+    if tr is None:  # extract DC as first row ( or mean)
         Xdc = np.sqrt(N) * np.mean(X)
         Xr = np.ones((N, 1)) * (Xdc / np.sqrt(N))  # reconstructed using only Xdc
         X = X - Xr
@@ -169,7 +169,7 @@ def imageapprox(A, par):
         Xr = np.concatenate((Xdc, np.zeros((N - 1, L))), axis=0)
 
     # do a sparse representation of X using the dictionary or thresholding
-    if Ds != None:
+    if Ds is not None:
         if tpsnr > 0:
             tSSE = ((Ma * Na) * peak * peak) * np.power(10, (-tpsnr / 10))
 
@@ -209,12 +209,12 @@ def imageapprox(A, par):
             Qw = W
             Qdc = Xdc
 
-        if tr == None:  # find Xr from Qdc
+        if tr is None:  # find Xr from Qdc
             Xr = np.ones((N, 1)) * (Qdc / np.sqrt(N))
         else:
             Xr = np.concatenate((Qdc, np.zeros((N - 1, L))), axis=0)
 
-        if Ds != None:  # sparse W, Xa = Ds.D * W,
+        if Ds is not None:  # sparse W, Xa = Ds.D * W,
             Xa = np.dot(np.float64(Ds.D), Qw)
             Ar = mycol2im(Xr + Xa, transform=tr, imsize=[Maa, Naa], size=[Ms, Ns])
         else:
@@ -246,7 +246,7 @@ def imageapprox(A, par):
     ## reshape
     if len(eb) > 1:
         # estimate bits
-        if Ds != None:  # a dictionary was used
+        if Ds is not None:  # a dictionary was used
             xCw = myreshape(Zw, method=2)
             xCdc = mypred(Zdc.reshape((int(Maa // 8), int(Naa // 8)), order="F"), nofS=3, verbose=0)
             xC = xCw + xCdc

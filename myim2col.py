@@ -74,10 +74,10 @@ def myim2col(
     Ni = 0  # increment
 
     # get the options
-    if transform != None:
+    if transform is not None:
         tr = transform
 
-    if size != None:
+    if size is not None:
         if len(size) == 1:
             Ms = max(0, np.floor(size).astype(int))
             Ns = Ms
@@ -87,9 +87,9 @@ def myim2col(
         else:
             raise IndexError("myim2col: illegal option size, we ignore it")
 
-    if adjust != None:
+    if adjust is not None:
         if (
-            (adjust == None)
+            (adjust is None)
             or (adjust == "extend")
             or (adjust == "zeros")
             or (adjust == "periodic")
@@ -97,7 +97,7 @@ def myim2col(
         ):
             amet = adjust
 
-    if neighborhood != None:
+    if neighborhood is not None:
         if len(neighborhood) <= 2:
             nei = np.ones(
                 ((neighborhood[0]).astype(int), (neighborhood[1]).astype(int))
@@ -109,7 +109,7 @@ def myim2col(
         else:
             raise IndexError("myim2col: illegal option neighborhood, we ignore it")
 
-    if offset != None:
+    if offset is not None:
         if len(offset) == 1:
             Mo = max(0, np.floor(offset).astype(int))
             No = Mo
@@ -119,7 +119,7 @@ def myim2col(
         else:
             raise IndexError("myim2col: illegal option offset. We ignore it.")
 
-    if increment != None:
+    if increment is not None:
         if len(increment) == 1:
             Mi = max(0, np.floor(increment).astype(int))
             Ni = Mi
@@ -137,7 +137,7 @@ def myim2col(
 
     # check and display options
     if (Ms == 0) or (Ns == 0):
-        if tr == None:
+        if tr is None:
             Ms = 4
             Ns = 4
         else:
@@ -145,7 +145,7 @@ def myim2col(
             Ns = 8
 
     if (
-        (not tr == None)
+        (not tr is None)
         and (not tr == "lot")
         and (not tr == "elt")
         and (not tr == "dct")
@@ -162,7 +162,7 @@ def myim2col(
             tr = tr[0 : Ms * P]
 
     if len(amet) == 0:
-        if tr == None:
+        if tr is None:
             amet = None
         else:
             amet = "extend"
@@ -178,7 +178,7 @@ def myim2col(
     if (Mo > 0) or (No > 0):
         A = A[Mo:, No:]
 
-    if tr != None:
+    if tr is not None:
         A = myimadjust(A, amet, [Ms, Ns])
 
     # do the transform
