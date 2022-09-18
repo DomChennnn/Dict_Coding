@@ -183,10 +183,12 @@ def imageapprox(A, par):
         else:
             print("imageapprox do not call sparseapprox (use W = D\X;).")
             W = Ds.D / X
+
         Xa = np.dot(np.float64(Ds.D), W)
         Ar = mycol2im(Xr + Xa, transform=tr, imsize=[Maa, Naa], size=[Ms, Ns])
         if imageadjust:
             Ar = Ar[0:Ma, 0:Na]
+
         R = A - Ar
         PSNRbq = 10 * np.log10((((Ma * Na) * peak * peak) / sum(sum(R * R))))  # sparse rep
 
@@ -195,7 +197,8 @@ def imageapprox(A, par):
     if dele < 0:  # try to select an appropriate value
         dele = -dele
         adaptdelta = True
-    for dummycounter in range(10):
+
+    for _ in range(10):
         # in loop only display if (verbose >= 2)
         if dele > 0:
             Zdc = uniquant(Xdc, deldc, thrdc, 2000)
