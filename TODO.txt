@@ -17,8 +17,8 @@ STM32版本解码器 -> turbo-juicer
 5. 使用 coverage 工具检查 dead code，可以找出哪些代码可以废弃：
     coverage run Demo_CodingDict.py && coverage html
 
-6. encode.py/decode.py 存在大量重复代码
+6. encode.py/decode.py 存在大量重复代码(一起重构)
 
-7. 使用更成熟的RLE实现
+7. 使用更成熟的RLE实现(一起重构)
 
 8. 在不使用GPU加速的情况下再次验证算法性能
